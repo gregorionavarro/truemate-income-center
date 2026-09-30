@@ -1,75 +1,14 @@
 (() => {
   if (window.__tmRecentFinalLoaded) return;
   window.__tmRecentFinalLoaded = true;
-
-  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const fmt = v => typeof money==='function' ? money(v) : new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+v||0);
-  const fmtDate = v => {
-    if(!v) return '—';
-    const d=new Date(v+'T12:00:00');
-    return Number.isNaN(d.getTime()) ? esc(v) : d.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
-  };
-  const badge = r => String(r.depStatus||'').toLowerCase()==='depositado'
-    ? '<span class="badge ok">Depositado</span>'
-    : '<span class="badge proc">En proceso</span>';
-
-  function getRows(){
-    try{return (typeof S!=='undefined' && S && Array.isArray(S.r)) ? S.r : [];}catch(_){return [];}
-  }
-
-  let busy=false;
-  let expanded=false;
-
-  function setupHeader(card,total){
-    const head=card?.querySelector('.head');
-    if(!head) return;
-    const h3=head.querySelector('h3');
-    if(h3){
-      h3.textContent='Movimientos recientes';
-      h3.style.cursor=total>5?'pointer':'default';
-      h3.title=total>5?(expanded?'Haz clic para mostrar solo los 5 más recientes':'Haz clic para mostrar todos los movimientos'):'';
-      h3.onclick=total>5?()=>{expanded=!expanded;renderRecentFinal();}:null;
-    }
-    const sub=head.querySelector('.sub'); if(sub) sub.style.display='none';
-    let actions=head.querySelector('.tm-recent-head-actions');
-    if(!actions){
-      actions=document.createElement('div');actions.className='tm-recent-head-actions';actions.style.cssText='display:flex;gap:8px;align-items:center;margin-left:auto';
-      const existing=head.querySelector('.btn.soft');
-      if(existing){head.insertBefore(actions,existing);actions.appendChild(existing);}else head.appendChild(actions);
-    }
-    const viewAll=actions.querySelector('.btn.soft:not(#tmRecentCollapse)') || head.querySelector('.btn.soft:not(#tmRecentCollapse)');
-    if(viewAll){viewAll.textContent='Ver todos →';viewAll.onclick=()=>go('income');}
-    let collapse=actions.querySelector('#tmRecentCollapse');
-    if(expanded && total>5){
-      if(!collapse){collapse=document.createElement('button');collapse.type='button';collapse.id='tmRecentCollapse';collapse.className='btn soft';actions.insertBefore(collapse,actions.firstChild);}
-      collapse.textContent='Mostrar menos ↑';collapse.onclick=()=>{expanded=false;renderRecentFinal();};
-    }else if(collapse)collapse.remove();
-  }
-
-  function renderRecentFinal(){
-    if(busy) return;
-    busy=true;
-    try{
-      const body=document.getElementById('recent'); if(!body) return;
-      const card=body.closest('.card'),table=body.closest('table'); if(!card||!table) return;
-      card.querySelectorAll('.tm-filters,.tm-recent-sort,#tmRecentExpand,.tm-recent-footer').forEach(x=>x.remove());
-      const allRows=getRows().slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
-      setupHeader(card,allRows.length);
-      const hr=table.querySelector('thead tr');
-      if(hr) hr.innerHTML='<th>Fecha pago</th><th>Cliente</th><th>Invoice</th><th>Producer</th><th>Método</th><th>Pagó cliente</th><th>Fee</th><th>Neto</th><th>Depósito</th><th>Acción</th>';
-      const rows=expanded ? allRows : allRows.slice(0,5);
-      body.innerHTML=rows.map(r=>`<tr>
-        <td>${fmtDate(r.date)}</td><td>${esc(r.client||'')}</td>
-        <td><button class="tm-link" onclick="tmInvoiceDetail('${String(r.invoice||'').replace(/'/g,"\\'")}')">${esc(r.invoice||'')}</button></td>
-        <td>${esc(r.producer||'')}</td><td>${esc(r.method||'')}</td><td>${fmt(r.gross)}</td><td>${fmt(r.agencyFee)}</td><td><b>${fmt(r.net)}</b></td><td>${badge(r)}</td>
-        <td><div class="tm-actions"><button class="btn soft" onclick="openModal('${r.id}')">Editar</button><button class="btn danger tm-delete" onclick="deleteIncome('${r.id}')">Eliminar</button></div></td>
-      </tr>`).join('') || '<tr><td colspan="10">Sin movimientos.</td></tr>';
-    } finally {setTimeout(()=>{busy=false},20);}
-  }
-
-  const prior=window.render;
-  if(typeof prior==='function') window.render=function(){ prior(); setTimeout(renderRecentFinal,120); };
-  const observer=new MutationObserver(()=>{ if(!busy) setTimeout(renderRecentFinal,30); });
-  const start=()=>{const body=document.getElementById('recent');if(body){observer.observe(body,{childList:true,subtree:false});renderRecentFinal();}else setTimeout(start,100);};
-  start();
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmt=v=>typeof money==='function'?money(v):new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+v||0);
+  const fmtDate=v=>{if(!v)return'—';const d=new Date(v+'T12:00:00');return Number.isNaN(d.getTime())?esc(v):d.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'})};
+  const depBadge=r=>String(r.depStatus||'').toLowerCase()==='depositado'?'<span class="badge ok">Depositado</span>':'<span class="badge proc">En proceso</span>';
+  const reviewBadge=r=>r.reviewStatus==='Revisado'?`<button class="tm-mini green" onclick="tmOpenIncomeReview('${r.id}')">Revisado</button>`:`<button class="tm-mini amber" onclick="tmOpenIncomeReview('${r.id}')">Por revisar</button>`;
+  const getRows=()=>{try{return (typeof S!=='undefined'&&S&&Array.isArray(S.r))?S.r:[]}catch(_){return[]}};
+  let busy=false,expanded=false;
+  function setupHeader(card,total){const head=card?.querySelector('.head');if(!head)return;const h3=head.querySelector('h3');if(h3){h3.textContent='Movimientos recientes';h3.style.cursor=total>5?'pointer':'default';h3.onclick=total>5?()=>{expanded=!expanded;renderRecentFinal()}:null}const sub=head.querySelector('.sub');if(sub)sub.style.display='none';let actions=head.querySelector('.tm-recent-head-actions');if(!actions){actions=document.createElement('div');actions.className='tm-recent-head-actions';actions.style.cssText='display:flex;gap:8px;align-items:center;margin-left:auto';const existing=head.querySelector('.btn.soft');if(existing){head.insertBefore(actions,existing);actions.appendChild(existing)}else head.appendChild(actions)}const viewAll=actions.querySelector('.btn.soft:not(#tmRecentCollapse)');if(viewAll){viewAll.textContent='Ver todos →';viewAll.onclick=()=>go('income')}let collapse=actions.querySelector('#tmRecentCollapse');if(expanded&&total>5){if(!collapse){collapse=document.createElement('button');collapse.type='button';collapse.id='tmRecentCollapse';collapse.className='btn soft';actions.insertBefore(collapse,actions.firstChild)}collapse.textContent='Mostrar menos ↑';collapse.onclick=()=>{expanded=false;renderRecentFinal()}}else if(collapse)collapse.remove()}
+  function renderRecentFinal(){if(busy)return;busy=true;try{const body=document.getElementById('recent');if(!body)return;const card=body.closest('.card'),table=body.closest('table');if(!card||!table)return;card.querySelectorAll('.tm-filters,.tm-recent-sort,#tmRecentExpand,.tm-recent-footer').forEach(x=>x.remove());const allRows=getRows().slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));setupHeader(card,allRows.length);const hr=table.querySelector('thead tr');if(hr)hr.innerHTML='<th>Fecha pago</th><th>Cliente</th><th>Invoice</th><th>Producer</th><th>Método</th><th>Pagó cliente</th><th>Fee</th><th>Neto</th><th>Depósito</th><th>Revisión</th><th>Acción</th>';const rows=expanded?allRows:allRows.slice(0,5);body.innerHTML=rows.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${esc(r.client||'')}</td><td><button class="tm-link" onclick="tmInvoiceDetail('${String(r.invoice||'').replace(/'/g,"\\'")}')">${esc(r.invoice||'')}</button></td><td>${esc(r.producer||'')}</td><td>${esc(r.method||'')}</td><td>${fmt(r.gross)}</td><td>${fmt(r.agencyFee)}</td><td><b>${fmt(r.net)}</b></td><td>${depBadge(r)}</td><td>${reviewBadge(r)}</td><td><div class="tm-actions"><button class="btn soft" onclick="openModal('${r.id}')">Editar</button><button class="btn danger tm-delete" onclick="deleteIncome('${r.id}')">Eliminar</button></div></td></tr>`).join('')||'<tr><td colspan="11">Sin movimientos.</td></tr>'}finally{setTimeout(()=>{busy=false},20)}}
+  const prior=window.render;if(typeof prior==='function')window.render=function(){prior();setTimeout(renderRecentFinal,120)};const observer=new MutationObserver(()=>{if(!busy)setTimeout(renderRecentFinal,30)});const start=()=>{const body=document.getElementById('recent');if(body){observer.observe(body,{childList:true,subtree:false});renderRecentFinal()}else setTimeout(start,100)};start();
 })();
