@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TrueMate Income Center · Preview V2</title>
+<style>
+:root{--navy:#12395f;--blue:#1f6ba7;--bg:#f4f7fb;--line:#d8e4ef;--text:#173f69;--muted:#6b7f95;--green:#168653;--red:#b82f41;--amber:#a76a00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,Arial,sans-serif;color:var(--text)}
+.sync{height:42px;background:#11385f;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:800}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#29c57a;margin-right:8px;box-shadow:0 0 0 4px rgba(255,255,255,.08)}
+.wrap{max-width:1720px;margin:18px auto;padding:0 22px 40px}.hero{background:linear-gradient(135deg,#123d67,#2b75ad);color:#fff;border-radius:22px;padding:26px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 14px 32px rgba(31,73,113,.12)}.hero h1{margin:0 0 6px;font-size:34px}.hero p{margin:0;opacity:.9;font-size:16px}.btn{border:0;border-radius:14px;padding:14px 22px;font-weight:900;color:#173f69;background:#fff;font-size:16px}.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.tab{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 18px;font-weight:900;color:#4d6279}.tab.active{background:#154b7a;color:#fff}
+.topgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(31,73,113,.04)}.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.card-title{font-size:18px;font-weight:950}.pill{font-size:12px;background:#edf4fb;color:#1f5686;border-radius:999px;padding:8px 11px;font-weight:900}.pill.green{background:#e7f7ee;color:#117243}.rank{display:flex;flex-direction:column;gap:13px}.rank-row{display:grid;grid-template-columns:28px 1fr 110px 18px;gap:10px;align-items:center}.num{width:28px;height:28px;border-radius:50%;background:#edf4fb;display:flex;align-items:center;justify-content:center;font-weight:900}.name{font-weight:900}.bar{height:7px;background:#edf1f5;border-radius:99px;overflow:hidden;margin-top:5px}.fill{height:100%;background:linear-gradient(90deg,#2d7fbd,#79b8e9)}.fill.green{background:linear-gradient(90deg,#218c65,#6fd3a0)}.fill.gold{background:linear-gradient(90deg,#c68b14,#edc861)}.amount{text-align:right;font-weight:900}.arrow{font-size:19px;color:#6a8199;font-weight:900}
+.main-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin-top:16px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th{background:#edf4fb;color:#536b84;text-transform:uppercase;font-size:10px;text-align:left;padding:10px}.table td{padding:11px 10px;border-bottom:1px solid #e7edf4}.badge{display:inline-flex;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:900}.danger{background:#ffe4e7;color:#a72134}.warn{background:#fff0c6;color:#8a5b00}.ok{background:#dff4e8;color:#117243}.neutral{background:#e9f1fb;color:#245c8c}.actions{display:flex;gap:6px}.mini{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-weight:900;font-size:11px;background:#f6f9fc;color:#174a78}.mini.red{background:#fff0f1;color:#b02335;border-color:#f1c7cc}
+@media(max-width:1100px){.topgrid,.main-grid{grid-template-columns:1fr}.hero{align-items:flex-start;gap:20px;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="sync"><div><span class="dot"></span>Sincronizado · todos ven la misma información</div><div>TrueMate · Multiusuario</div></div>
+<div class="wrap">
+  <div class="hero"><div><h1>TrueMate Income Center · Trucking</h1><p>Revenue & Cash Flow Analyzer · Cobros, diferidos, depósitos y Carrier/PFA</p></div><button class="btn">+ Registrar ingreso</button></div>
+  <div class="tabs"><div class="tab active">1 · Resumen</div><div class="tab">2 · Ingresos</div><div class="tab">3 · Diferidos</div><div class="tab">4 · Carrier / PFA</div><div class="tab">5 · Fees / Producers</div><div class="tab">6 · Año por mes</div><div class="tab">7 · Notas / Tareas</div><div class="tab">8 · Configuración</div></div>
+
+  <div class="topgrid">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Top Producers · Mes</div><div class="pill green">Fees del mes: $7,600.66</div></div>
+      <div class="rank">
+        <div class="rank-row"><div class="num">1</div><div><div class="name">Marcela Hernandez</div><div class="bar"><div class="fill green" style="width:100%"></div></div></div><div class="amount">$5,500.00</div><div class="arrow">›</div></div>
+        <div class="rank-row"><div class="num">2</div><div><div class="name">Andres Guisao</div><div class="bar"><div class="fill green" style="width:29%"></div></div></div><div class="amount">$1,600.66</div><div class="arrow">›</div></div>
+        <div class="rank-row"><div class="num">3</div><div><div class="name">Gregorio Navarro</div><div class="bar"><div class="fill green" style="width:5%"></div></div></div><div class="amount">$200.00</div><div class="arrow">›</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Pagos a aseguradoras · Mes</div><div class="pill">Ver detalle →</div></div>
+      <div class="rank">
+        <div class="rank-row"><div class="num">1</div><div><div class="name">Rocklake - Canal</div><div class="bar"><div class="fill" style="width:100%"></div></div></div><div class="amount">$4,700.00</div><div class="arrow">›</div></div>
+        <div class="rank-row"><div class="num">2</div><div><div class="name">Progressive</div><div class="bar"><div class="fill" style="width:61%"></div></div></div><div class="amount">$2,850.00</div><div class="arrow">›</div></div>
+        <div class="rank-row"><div class="num">3</div><div><div class="name">National General</div><div class="bar"><div class="fill" style="width:40%"></div></div></div><div class="amount">$1,900.00</div><div class="arrow">›</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Métodos de pago · Mes</div><div class="pill">Ver detalle →</div></div>
+      <div class="rank">
+        <div class="rank-row"><div class="num">1</div><div><div class="name">Stripe</div><div class="bar"><div class="fill gold" style="width:100%"></div></div></div><div class="amount">$10,453.73</div><div class="arrow">›</div></div>
+        <div class="rank-row"><div class="num">2</div><div><div class="name">Check</div><div class="bar"><div class="fill gold" style="width:31%"></div></div></div><div class="amount">$3,200.00</div><div class="arrow">›</div></div>
+        <div class="rank-row"><div class="num">3</div><div><div class="name">Zelle / ACH</div><div class="bar"><div class="fill gold" style="width:14%"></div></div></div><div class="amount">$1,500.00</div><div class="arrow">›</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Movimientos recientes</div><div class="pill">Ver más →</div></div>
+      <table class="table"><thead><tr><th>Fecha pago</th><th>Cliente</th><th>Invoice</th><th>Neto</th><th>Depósito</th><th>Acción</th></tr></thead><tbody>
+        <tr><td>15/09/2026</td><td>Acme Logistics</td><td>INV-4587</td><td>$3,250.00</td><td><span class="badge ok">Depositado</span></td><td><div class="actions"><button class="mini">Editar</button><button class="mini red">Eliminar</button></div></td></tr>
+        <tr><td>12/09/2026</td><td>Global Transit</td><td>INV-4586</td><td>$1,750.00</td><td><span class="badge ok">Depositado</span></td><td><div class="actions"><button class="mini">Editar</button><button class="mini red">Eliminar</button></div></td></tr>
+        <tr><td>08/09/2026</td><td>Sunrise Transport</td><td>INV-4585</td><td>$2,400.00</td><td><span class="badge warn">En proceso</span></td><td><div class="actions"><button class="mini">Editar</button><button class="mini red">Eliminar</button></div></td></tr>
+        <tr><td>05/09/2026</td><td>Riverside Carriers</td><td>INV-4584</td><td>$1,920.00</td><td><span class="badge ok">Depositado</span></td><td><div class="actions"><button class="mini">Editar</button><button class="mini red">Eliminar</button></div></td></tr>
+        <tr><td>02/09/2026</td><td>Fast Line LLC</td><td>INV-4583</td><td>$1,350.00</td><td><span class="badge ok">Depositado</span></td><td><div class="actions"><button class="mini">Editar</button><button class="mini red">Eliminar</button></div></td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">Próximos pagos a Carrier / MGA / PFA</div><div class="pill">Ver todos los pagos →</div></div>
+      <table class="table"><thead><tr><th>Carrier / MGA / PFA</th><th>Monto a pagar</th><th>Fecha límite</th><th>Días restantes</th></tr></thead><tbody>
+        <tr><td>Rocklake - Canal</td><td>$1,200.00</td><td>02/10/2026</td><td><span class="badge danger">2 días</span></td></tr>
+        <tr><td>Jencap</td><td>$2,000.00</td><td>05/10/2026</td><td><span class="badge warn">5 días</span></td></tr>
+        <tr><td>Prime</td><td>$1,500.00</td><td>28/09/2026</td><td><span class="badge danger">Vencido</span></td></tr>
+        <tr><td>RPS</td><td>$950.00</td><td>10/10/2026</td><td><span class="badge neutral">10 días</span></td></tr>
+        <tr><td>JM Wilson</td><td>$2,300.00</td><td>12/10/2026</td><td><span class="badge neutral">12 días</span></td></tr>
+      </tbody></table>
+    </div>
+  </div>
+</div>
+</body>
+</html>
