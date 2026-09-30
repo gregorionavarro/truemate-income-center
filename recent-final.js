@@ -22,6 +22,23 @@
   }
 
   let busy=false;
+  let expanded=false;
+
+  function ensureExpandButton(card, total){
+    if(!card) return;
+    let foot=card.querySelector('.tm-recent-footer');
+    if(!foot){
+      foot=document.createElement('div');
+      foot.className='tm-recent-footer';
+      foot.style.cssText='display:flex;justify-content:center;padding-top:12px';
+      card.appendChild(foot);
+    }
+    if(total<=5){foot.innerHTML='';foot.style.display='none';return;}
+    foot.style.display='flex';
+    foot.innerHTML=`<button type="button" class="btn soft" id="tmRecentToggle">${expanded?'Mostrar menos ↑':`Mostrar más (${total-5}) ↓`}</button>`;
+    foot.querySelector('#tmRecentToggle').onclick=()=>{expanded=!expanded;renderRecentFinal();};
+  }
+
   function renderRecentFinal(){
     if(busy) return;
     busy=true;
@@ -44,9 +61,8 @@
       const hr=table.querySelector('thead tr');
       if(hr) hr.innerHTML='<th>Fecha pago</th><th>Cliente</th><th>Invoice</th><th>Producer</th><th>Método</th><th>Pagó cliente</th><th>Fee</th><th>Neto</th><th>Depósito</th><th>Acción</th>';
 
-      const rows=getRows().slice()
-        .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))
-        .slice(0,5);
+      const allRows=getRows().slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+      const rows=expanded ? allRows : allRows.slice(0,5);
 
       body.innerHTML=rows.map(r=>`<tr>
         <td>${fmtDate(r.date)}</td>
@@ -60,6 +76,8 @@
         <td>${badge(r)}</td>
         <td><div class="tm-actions"><button class="btn soft" onclick="openModal('${r.id}')">Editar</button><button class="btn danger" onclick="deleteIncome('${r.id}')">Eliminar</button></div></td>
       </tr>`).join('') || '<tr><td colspan="10">Sin movimientos.</td></tr>';
+
+      ensureExpandButton(card,allRows.length);
     } finally {
       setTimeout(()=>{busy=false},20);
     }
