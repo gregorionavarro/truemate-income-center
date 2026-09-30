@@ -2,7 +2,8 @@ const DEFAULT_STATE = {
   r: [],
   p: ["Greg", "Carlos", "Paulina", "Fabiola"],
   c: ["Imperial PFS", "Great West", "RPS"],
-  t: []
+  t: [],
+  a: []
 };
 
 async function ensureTable(DB) {
@@ -39,7 +40,8 @@ export async function onRequestGet(context) {
 
   let state = DEFAULT_STATE;
   try {
-    state = JSON.parse(row.json);
+    const parsed = JSON.parse(row.json);
+    state = { ...DEFAULT_STATE, ...parsed, a: Array.isArray(parsed?.a) ? parsed.a : [] };
   } catch (_) {}
 
   return json({ ok: true, exists: true, state, updated_at: row.updated_at });
@@ -63,7 +65,13 @@ export async function onRequestPost(context) {
     return json({ ok: false, error: "Estado inválido" }, { status: 400 });
   }
 
-  const payload = JSON.stringify({ r: state.r, p: state.p, c: state.c, t: state.t });
+  const payload = JSON.stringify({
+    r: state.r,
+    p: state.p,
+    c: state.c,
+    t: state.t,
+    a: Array.isArray(state.a) ? state.a : []
+  });
   await DB.prepare(`
     INSERT INTO app_state (id, json, updated_at)
     VALUES (1, ?, CURRENT_TIMESTAMP)
