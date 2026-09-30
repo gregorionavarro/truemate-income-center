@@ -13,6 +13,14 @@
     ? '<span class="badge ok">Depositado</span>'
     : '<span class="badge proc">En proceso</span>';
 
+  function getRows(){
+    try{
+      return (typeof S!=='undefined' && S && Array.isArray(S.r)) ? S.r : [];
+    }catch(_){
+      return [];
+    }
+  }
+
   let busy=false;
   function renderRecentFinal(){
     if(busy) return;
@@ -36,7 +44,7 @@
       const hr=table.querySelector('thead tr');
       if(hr) hr.innerHTML='<th>Fecha pago</th><th>Cliente</th><th>Invoice</th><th>Producer</th><th>Método</th><th>Pagó cliente</th><th>Fee</th><th>Neto</th><th>Depósito</th><th>Acción</th>';
 
-      const rows=(Array.isArray(window.S?.r)?S.r:[]).slice()
+      const rows=getRows().slice()
         .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))
         .slice(0,5);
 
