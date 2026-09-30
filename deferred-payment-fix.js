@@ -15,6 +15,13 @@
     o.querySelector('.tm-close').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove()});document.body.appendChild(o);return o;
   }
 
+  function toast(title,detail=''){
+    let x=document.getElementById('tm-payment-toast');
+    if(!x){x=document.createElement('div');x.id='tm-payment-toast';x.style.cssText='position:fixed;right:22px;top:22px;z-index:99999;background:#173f69;color:#fff;padding:14px 16px;border-radius:14px;min-width:290px;max-width:430px;box-shadow:0 14px 34px rgba(0,0,0,.22)';document.body.appendChild(x)}
+    x.innerHTML=`<b style="display:block;font-size:14px">${esc(title)}</b>${detail?`<span style="display:block;font-size:12px;margin-top:4px;opacity:.9">${esc(detail)}</span>`:''}`;
+    x.style.display='block';clearTimeout(x._t);x._t=setTimeout(()=>x.style.display='none',4200);
+  }
+
   function nextReference(origin,planIndex){
     const base=`${origin}-DIF-${planIndex+1}`;
     let candidate=base,n=2;
@@ -53,6 +60,7 @@
         <div class="tm-field"><label>Fee cobrado al cliente</label><input id="tmPayAgencyFee" type="number" min="0" step="0.01" value="0"></div>
         <div class="tm-field" id="tmPayProcWrap"><label>Fee procesador</label><input id="tmPayProcFee" type="number" min="0" step="0.01" value="0"><div class="tm-note">Solo aplica a Stripe.</div></div>
         <div class="tm-field"><label>Estado depósito</label><select id="tmPayDep"><option>En proceso</option><option>Depositado</option></select></div>
+        <div class="tm-field"><label>Clasificación del ingreso</label><select id="tmIncomeType"><option value="Por revisar">Por revisar</option><option value="Down payment / Prima">Down payment / Prima</option><option value="Fee agencia">Fee agencia</option><option value="Comisión">Comisión</option><option value="Otro">Otro</option></select><div class="tm-note">Si no estás seguro, déjalo en “Por revisar”. El sistema creará una tarea para verificarlo.</div></div>
       </div>
       <div class="tm-note" style="margin-top:12px">Este movimiento quedará identificado como <b>Pago diferido</b> y vinculado a la factura origen <b>${esc(r.invoice)}</b>. No se confundirá con un ingreso nuevo independiente.</div>
     `,`<button class="btn soft" id="tmCancelPay">Cancelar</button><button class="btn navy" id="tmConfirmPay">Registrar pago diferido</button>`);
@@ -78,17 +86,19 @@
       const procFee=method.value==='Stripe'?(+pf.value||0):0;
       const agencyFee=+(o.querySelector('#tmPayAgencyFee').value||0);
       const payDate=o.querySelector('#tmPayDate').value||today();
-
-      (S.r||[]).push({
+      const incomeType=o.querySelector('#tmIncomeType')?.value||'Por revisar';
+      const newRec={
         id:uid(),client:r.client,company:r.company,invoice:inv,
         parentInvoice:r.invoice,sourceInvoice:r.invoice,paymentPlanId:p.id,
         paymentType:'Diferido',isDeferredPayment:true,
+        incomeType,reviewStatus:incomeType==='Por revisar'?'Pendiente':'Revisado',
         producer:r.producer,date:payDate,method:method.value,gross:amt,agencyFee,procFee,
         net:Math.max(0,amt-procFee),depStatus:dep.value,
         depDate:dep.value==='Depositado'?payDate:'',pending:0,defDate:'',defAmt:0,
         carrier:'',carrierAmt:0,carrierDue:'',carrierStatus:'No aplica',
-        note:`Pago diferido aplicado a factura origen ${r.invoice}`
-      });
+        note:`Pago diferido aplicado a factura origen ${r.invoice} · Clasificación: ${incomeType}`
+      };
+      (S.r||[]).push(newRec);
 
       p.remaining=Math.max(0,remaining-amt);
       p.status=p.remaining<=0?'Pagado':'Parcial';
@@ -100,8 +110,19 @@
       if(task&&p.remaining<=0){task.done=true;task.doneAt=today();task.status='Realizada';}
       else if(task&&p.remaining>0){task.note=`${r.client} · ${fmt(p.remaining)}`;}
 
-      store();render();o.remove();
-      alert(r.pending>0?`Pago diferido registrado. Saldo pendiente total: ${fmt(r.pending)}`:'Pago diferido registrado. La factura origen quedó saldada.');
+      if(incomeType==='Por revisar'){
+        const exists=(S.t||[]).some(t=>t.reviewInvoice===inv&&!t.done);
+        if(!exists)(S.t||[]).push({id:uid(),title:`Revisar ingreso · ${inv}`,date:payDate,note:`${r.client} · ${fmt(amt)} · confirmar si es fee, comisión, down payment/prima u otro`,invoice:inv,reviewInvoice:inv,auto:false,done:false,status:'Abierta'});
+      }
+
+      try{store()}catch(e){
+        console.error(e);
+        localStorage.setItem('tmic_r',JSON.stringify(S.r||[]));
+        localStorage.setItem('tmic_t',JSON.stringify(S.t||[]));
+      }
+      o.remove();
+      toast('Pago diferido guardado correctamente',`${inv} · ${fmt(amt)}${incomeType==='Por revisar'?' · marcado para revisión':''}`);
+      setTimeout(()=>{try{render()}catch(e){console.error('Render después de pago diferido',e)}},60);
     };
   };
 })();
