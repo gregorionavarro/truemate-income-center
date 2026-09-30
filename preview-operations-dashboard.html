@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TrueMate Income Center · Preview Operativo</title>
+<style>
+:root{--navy:#0f3559;--blue:#1f6ba7;--bg:#f4f7fb;--line:#d8e4ef;--text:#173f69;--muted:#6b7f95;--green:#168653;--red:#b82f41;--amber:#b37a00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,Arial,sans-serif;color:var(--text)}
+.sync{height:42px;background:#11385f;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:800}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#29c57a;margin-right:8px;box-shadow:0 0 0 4px rgba(255,255,255,.08)}
+.wrap{max-width:1680px;margin:18px auto;padding:0 22px 40px}.hero{background:linear-gradient(135deg,#123d67,#2b75ad);color:#fff;border-radius:22px;padding:28px 32px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 14px 32px rgba(31,73,113,.12)}.hero h1{margin:0 0 6px;font-size:34px}.hero p{margin:0;opacity:.9;font-size:16px}.btn{border:0;border-radius:14px;padding:14px 22px;font-weight:900;color:#173f69;background:#fff;font-size:16px}.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.tab{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 18px;font-weight:900;color:#4d6279}.tab.active{background:#154b7a;color:#fff}.section{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:18px}.section h2{font-size:20px;margin:0}.sub{font-size:13px;color:var(--muted);margin-top:4px}.ops{background:linear-gradient(90deg,#fff8f7,#fff);border-color:#f1d6d1}.ops-head{display:flex;gap:14px;align-items:center;margin-bottom:14px}.icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffe3e3;font-size:21px}.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.kpi{border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff}.kpi small{display:block;text-transform:uppercase;font-weight:900;color:#64798f;font-size:11px}.kpi b{display:block;font-size:28px;margin:7px 0}.kpi span{font-size:12px;color:var(--muted)}.kpi.red{background:#fff5f5}.kpi.amber{background:#fff9e9}.kpi.blue{background:#f2f7ff}.kpi.green{background:#effaf4}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px}.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.card-title{font-size:18px;font-weight:950}.pill{font-size:12px;background:#edf4fb;color:#1f5686;border-radius:999px;padding:8px 11px;font-weight:900}.table{width:100%;border-collapse:collapse;font-size:13px}.table th{background:#edf4fb;color:#536b84;text-transform:uppercase;font-size:10px;text-align:left;padding:10px}.table td{padding:11px 10px;border-bottom:1px solid #e7edf4}.badge{display:inline-flex;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:900}.danger{background:#ffe4e7;color:#a72134}.warn{background:#fff0c6;color:#8a5b00}.ok{background:#dff4e8;color:#117243}.neutral{background:#e9f1fb;color:#245c8c}.rank{display:flex;flex-direction:column;gap:13px}.rank-row{display:grid;grid-template-columns:28px 1fr 110px;gap:10px;align-items:center}.num{width:28px;height:28px;border-radius:50%;background:#edf4fb;display:flex;align-items:center;justify-content:center;font-weight:900}.name{font-weight:900}.bar{height:7px;background:#edf1f5;border-radius:99px;overflow:hidden;margin-top:5px}.fill{height:100%;background:linear-gradient(90deg,#2d7fbd,#79b8e9)}.amount{text-align:right;font-weight:900}.right-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.activity{display:flex;flex-direction:column;gap:12px}.event{display:grid;grid-template-columns:14px 1fr;gap:10px}.event-dot{width:10px;height:10px;border-radius:50%;background:#2a74b8;margin-top:4px}.event p{margin:0;font-size:13px}.event small{color:var(--muted)}
+@media(max-width:1100px){.kpis{grid-template-columns:1fr 1fr}.grid,.right-grid{grid-template-columns:1fr}.hero{align-items:flex-start;gap:20px;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="sync"><div><span class="dot"></span>Sincronizado · todos ven la misma información</div><div>TrueMate · Multiusuario</div></div>
+<div class="wrap">
+  <div class="hero"><div><h1>TrueMate Income Center · Trucking</h1><p>Revenue & Cash Flow Analyzer · Cobros, diferidos, depósitos y Carrier/PFA</p></div><button class="btn">+ Registrar ingreso</button></div>
+  <div class="tabs"><div class="tab active">1 · Resumen</div><div class="tab">2 · Ingresos</div><div class="tab">3 · Diferidos</div><div class="tab">4 · Carrier / PFA</div><div class="tab">5 · Fees / Producers</div><div class="tab">6 · Año por mes</div><div class="tab">7 · Notas / Tareas</div><div class="tab">8 · Configuración</div></div>
+
+  <div class="section ops">
+    <div class="ops-head"><div class="icon">📅</div><div><h2>Control operativo de pagos por vencer</h2><div class="sub">Revisar pagos antes de la fecha límite para mantener la operación al día.</div></div></div>
+    <div class="kpis">
+      <div class="kpi red"><small>Carrier/PFA próximos</small><b>3</b><span>Vencen en 2, 5 y 7 días</span></div>
+      <div class="kpi red"><small>Carrier/PFA vencidos</small><b>1</b><span>Requiere atención inmediata</span></div>
+      <div class="kpi amber"><small>Down payments por pagar</small><b>$4,500.00</b><span>2 pagos pendientes</span></div>
+      <div class="kpi blue"><small>Cartera pendiente</small><b>$1,350.00</b><span>Cobros por recibir</span></div>
+      <div class="kpi green"><small>Depósitos en proceso</small><b>$2,000.00</b><span>En tránsito / por conciliar</span></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Próximos pagos a Carrier / MGA / PFA</div><div class="pill">Ver todos los pagos →</div></div>
+      <table class="table"><thead><tr><th>Carrier / MGA / PFA</th><th>Monto a pagar</th><th>Fecha límite</th><th>Días restantes</th><th>Responsable</th><th>Estado</th></tr></thead><tbody>
+        <tr><td>Rocklake - Canal</td><td>$1,200.00</td><td>02/10/2026</td><td><span class="badge danger">2 días</span></td><td>Paulina</td><td><span class="badge warn">Pendiente</span></td></tr>
+        <tr><td>Jencap</td><td>$2,000.00</td><td>05/10/2026</td><td><span class="badge warn">5 días</span></td><td>Paulina</td><td><span class="badge warn">Pendiente</span></td></tr>
+        <tr><td>Prime</td><td>$1,500.00</td><td>28/09/2026</td><td><span class="badge danger">Vencido</span></td><td>Paulina</td><td><span class="badge danger">Vencido</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Top Producers · Mes</div><div class="pill">Fees del mes: $7,600.66</div></div>
+      <div class="rank">
+        <div class="rank-row"><div class="num">1</div><div><div class="name">Marcela Hernandez</div><div class="bar"><div class="fill" style="width:100%"></div></div></div><div class="amount">$2,850.25</div></div>
+        <div class="rank-row"><div class="num">2</div><div><div class="name">Andres Guisao</div><div class="bar"><div class="fill" style="width:82%"></div></div></div><div class="amount">$2,340.10</div></div>
+        <div class="rank-row"><div class="num">3</div><div><div class="name">Gregorio Navarro</div><div class="bar"><div class="fill" style="width:40%"></div></div></div><div class="amount">$1,120.31</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-grid">
+    <div class="card"><div class="card-head"><div class="card-title">Métodos de pago · Mes</div><div class="pill">Detalle →</div></div><div class="rank">
+      <div class="rank-row"><div class="num">1</div><div><div class="name">Stripe</div><div class="bar"><div class="fill" style="width:100%"></div></div></div><div class="amount">$6,420.50</div></div>
+      <div class="rank-row"><div class="num">2</div><div><div class="name">Check</div><div class="bar"><div class="fill" style="width:51%"></div></div></div><div class="amount">$3,250.00</div></div>
+      <div class="rank-row"><div class="num">3</div><div><div class="name">Zelle</div><div class="bar"><div class="fill" style="width:30%"></div></div></div><div class="amount">$1,930.16</div></div>
+    </div></div>
+    <div class="card"><div class="card-head"><div class="card-title">Pagos a aseguradoras · Mes</div><div class="pill">Detalle →</div></div><div class="rank">
+      <div class="rank-row"><div class="num">1</div><div><div class="name">Rocklake</div><div class="bar"><div class="fill" style="width:100%"></div></div></div><div class="amount">$4,700.00</div></div>
+      <div class="rank-row"><div class="num">2</div><div><div class="name">Progressive</div><div class="bar"><div class="fill" style="width:61%"></div></div></div><div class="amount">$2,850.00</div></div>
+      <div class="rank-row"><div class="num">3</div><div><div class="name">National General</div><div class="bar"><div class="fill" style="width:40%"></div></div></div><div class="amount">$1,900.00</div></div>
+    </div></div>
+    <div class="card"><div class="card-head"><div class="card-title">Actividad reciente</div><div class="pill">Ver todas</div></div><div class="activity">
+      <div class="event"><div class="event-dot" style="background:#25a55b"></div><div><p>Se registró un cobro de $1,150.00</p><small>Hoy, 10:24 AM · Camila</small></div></div>
+      <div class="event"><div class="event-dot"></div><div><p>Se agregó pago a Rocklake - Canal</p><small>Hoy, 09:18 AM · Paulina</small></div></div>
+      <div class="event"><div class="event-dot"></div><div><p>Se actualizó fecha límite de Jencap</p><small>Ayer, 04:32 PM · Paulina</small></div></div>
+      <div class="event"><div class="event-dot" style="background:#93a4b5"></div><div><p>Se registró un depósito de $2,000.00</p><small>Ayer, 11:20 AM · Camila</small></div></div>
+    </div></div>
+  </div>
+</div>
+</body></html>
