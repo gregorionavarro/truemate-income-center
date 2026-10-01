@@ -4,7 +4,7 @@
 
   const $ = id => document.getElementById(id);
   const fmtMoney = v => typeof money === 'function' ? money(v) : new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+v||0);
-  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
 
   function ensureStyle(){
     if ($('tm-summary-payments-style')) return;
@@ -83,6 +83,7 @@
   }
 
   function apply(){ensureStyle();normalizeRecent();buildCarrierCard();}
+  window.tmRefreshSummaryPayments=apply;
   const originalRender=window.render;if(typeof originalRender==='function')window.render=function(){originalRender();setTimeout(apply,0)};
   setTimeout(apply,0);
 })();
