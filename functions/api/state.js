@@ -9,7 +9,23 @@ const DEFAULT_STATE = {
     "Guardian": "https://guardian-ins.epaypolicy.com/",
     "Rocklake": "https://rocklakeig.epaypolicy.com/",
     "Burns and Wilcox": "https://burnsandwilcox.epaypolicy.com/"
-  }
+  },
+  w: {
+    users: [
+      { name: "Gregorio Navarro", email: "gregorio.navarro@truemategroup.com", active: true },
+      { name: "Paulina Bermudez", email: "paula.bermudez@truemategroup.com", active: true },
+      { name: "Camila", email: "camila@truemategroup.com", active: true },
+      { name: "Fabiola Bermudez", email: "fabiola.bermudez@truemategroup.com", active: true }
+    ],
+    assignments: {
+      carrierReview: "paula.bermudez@truemategroup.com",
+      carrierPayment: "gregorio.navarro@truemategroup.com",
+      deferredCollection: "camila@truemategroup.com"
+    },
+    internalNotifications: true
+  },
+  h: [],
+  n: []
 };
 
 async function ensureTable(DB) {
@@ -51,7 +67,10 @@ export async function onRequestGet(context) {
       ...DEFAULT_STATE,
       ...parsed,
       a: Array.isArray(parsed?.a) ? parsed.a : [],
-      l: parsed?.l && typeof parsed.l === 'object' && !Array.isArray(parsed.l) ? parsed.l : DEFAULT_STATE.l
+      l: parsed?.l && typeof parsed.l === 'object' && !Array.isArray(parsed.l) ? parsed.l : DEFAULT_STATE.l,
+      w: parsed?.w && typeof parsed.w === 'object' && !Array.isArray(parsed.w) ? parsed.w : DEFAULT_STATE.w,
+      h: Array.isArray(parsed?.h) ? parsed.h : [],
+      n: Array.isArray(parsed?.n) ? parsed.n : []
     };
   } catch (_) {}
 
@@ -82,7 +101,10 @@ export async function onRequestPost(context) {
     c: state.c,
     t: state.t,
     a: Array.isArray(state.a) ? state.a : [],
-    l: state.l && typeof state.l === 'object' && !Array.isArray(state.l) ? state.l : DEFAULT_STATE.l
+    l: state.l && typeof state.l === 'object' && !Array.isArray(state.l) ? state.l : DEFAULT_STATE.l,
+    w: state.w && typeof state.w === 'object' && !Array.isArray(state.w) ? state.w : DEFAULT_STATE.w,
+    h: Array.isArray(state.h) ? state.h.slice(-2000) : [],
+    n: Array.isArray(state.n) ? state.n.slice(-1000) : []
   });
   await DB.prepare(`
     INSERT INTO app_state (id, json, updated_at)
