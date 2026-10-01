@@ -48,6 +48,10 @@
     if(el)el.textContent=label(s.y,s.m);
   }
 
+  function refreshFinalCarrierSoon(){
+    [0,60,180,400,800].forEach(ms=>setTimeout(()=>window.tmRefreshFinalCarrierCard?.(),ms));
+  }
+
   function refreshMonthViews(){
     if(refreshing)return;
     refreshing=true;
@@ -58,8 +62,8 @@
       if(typeof window.tmRefreshSummaryPayments==='function') window.tmRefreshSummaryPayments();
       if(typeof window.tmRefreshStableDashboard==='function') window.tmRefreshStableDashboard();
       if(typeof window.tmRefreshDashboardExtras==='function') window.tmRefreshDashboardExtras();
-      if(typeof window.tmRefreshFinalCarrierCard==='function') window.tmRefreshFinalCarrierCard();
       updatePeriodText();
+      refreshFinalCarrierSoon();
     }catch(e){console.warn('Month refresh',e)}
     setTimeout(()=>{refreshing=false},80);
   }
@@ -81,11 +85,11 @@
     const mo=$('mo'),yr=$('yr');if(!mo||!yr)return false;
     if(!mo.dataset.tmMonthPersist){
       mo.dataset.tmMonthPersist='1';
-      mo.addEventListener('change',()=>{persist();updatePeriodText();setTimeout(refreshMonthViews,30)});
+      mo.addEventListener('change',()=>{persist();updatePeriodText();setTimeout(refreshMonthViews,30);refreshFinalCarrierSoon()});
     }
     if(!yr.dataset.tmMonthPersist){
       yr.dataset.tmMonthPersist='1';
-      yr.addEventListener('change',()=>{persist();updatePeriodText();setTimeout(refreshMonthViews,30)});
+      yr.addEventListener('change',()=>{persist();updatePeriodText();setTimeout(refreshMonthViews,30);refreshFinalCarrierSoon()});
     }
     restore();
     return true;
@@ -135,6 +139,7 @@
         },250);
       }
       setTimeout(refreshMonthViews,180);
+      refreshFinalCarrierSoon();
       return out;
     };
   }
@@ -142,7 +147,7 @@
   function improvePendingCarrierShortcut(){
     const b=$('tmCarrierPendingCount');if(!b)return;
     const rows=(()=>{try{return Array.isArray(S?.r)?S.r:[]}catch(_){return[]}})();
-    const pending=rows.filter(r=>(+r.downPayment||+r.carrierAmt)>0&&!(r.carrier&&r.carrierDue)&&String(r.carrierStatus||'').toLowerCase()!=='pagado');
+    const pending=rows.filter(r=>Math.max(+r.downPayment||0,+r.carrierAmt||0)>0&&!(r.carrier&&r.carrierDue)&&String(r.carrierStatus||'').toLowerCase()!=='pagado');
     if(pending.length===1){
       b.title='Abrir el único Carrier/PFA pendiente de completar';
       b.onclick=()=>{if(typeof window.tmEditCarrierObligation==='function')window.tmEditCarrierObligation(pending[0].id);else if(typeof window.go==='function')window.go('carrier')};
@@ -153,7 +158,7 @@
     if(document.getElementById('tm-carrier-card-final')||window.__tmCarrierCardFinalLoaded)return;
     const s=document.createElement('script');
     s.id='tm-carrier-card-final';
-    s.src='/carrier-card-final.js?v=1';
+    s.src='/carrier-card-final.js?v=2';
     s.onload=()=>setTimeout(()=>window.tmRefreshFinalCarrierCard?.(),60);
     document.head.appendChild(s);
   }
@@ -172,7 +177,7 @@
     installSaveWarning();
     loadFinalCarrierCard();
     setTimeout(()=>{refreshMonthViews();improvePendingCarrierShortcut()},350);
-    setTimeout(()=>{improvePendingCarrierShortcut();window.tmRefreshFinalCarrierCard?.()},1200);
+    setTimeout(()=>{improvePendingCarrierShortcut();refreshFinalCarrierSoon()},1200);
   }
   boot();
 })();
