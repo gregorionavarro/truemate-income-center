@@ -1,7 +1,7 @@
 (() => {
   if(window.__tmCarrierOverdueFixLoaded)return;window.__tmCarrierOverdueFixLoaded=true;
   const $=id=>document.getElementById(id);
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const fmt=v=>typeof money==='function'?money(v):new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+v||0);
   const daysTo=d=>{if(!d)return 999;const end=new Date(d+'T12:00:00'),now=new Date();now.setHours(12,0,0,0);return Math.ceil((end-now)/864e5)};
   function overdueRows(){return (S.r||[]).filter(r=>{const amt=+(r.carrierAmt||r.downPayment||0);const st=String(r.carrierStatus||'').toLowerCase();return amt>0&&r.carrierDue&&daysTo(r.carrierDue)<0&&st!=='pagado';});}
@@ -10,13 +10,4 @@
   function apply(){try{reconcile();const n=overdueRows().length;const count=$('lateCarrier');if(count)count.textContent=n;const card=count?.closest('.alert');if(card){card.onclick=popup;card.title='Ver Carrier/PFA vencidos';card.style.cursor='pointer';}}catch(e){console.error('carrier overdue fix',e)}}
   const old=window.render;if(typeof old==='function')window.render=function(){old();setTimeout(apply,180)};
   setTimeout(apply,500);setInterval(apply,4000);
-
-  // Load final admin UI cleanup after the other workflow scripts finish loading.
-  setTimeout(()=>{
-    if(document.getElementById('tm-admin-ui-cleanup'))return;
-    const s=document.createElement('script');
-    s.id='tm-admin-ui-cleanup';
-    s.src='/admin-ui-cleanup.js?v=1';
-    document.head.appendChild(s);
-  },1200);
 })();
