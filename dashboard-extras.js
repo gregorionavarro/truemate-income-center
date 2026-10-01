@@ -2,10 +2,11 @@
   if (window.__tmDashboardExtrasLoaded) return;
   window.__tmDashboardExtrasLoaded = true;
 
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const fmt=v=>typeof money==='function'?money(v):new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+v||0);
   const getRows=()=>{try{return (typeof S!=='undefined'&&S&&Array.isArray(S.r))?S.r:[]}catch(_){return[]}};
   const monthKey=()=>`${document.getElementById('yr')?.value||new Date().getFullYear()}-${String(document.getElementById('mo')?.value||new Date().getMonth()+1).padStart(2,'0')}`;
+  const dayDiff=v=>{if(!v)return 999;const d=new Date(v+'T12:00:00'),n=new Date();const t=new Date(n.getFullYear(),n.getMonth(),n.getDate(),12);return Number.isNaN(d.getTime())?999:Math.ceil((d-t)/86400000)};
 
   function style(){
     if(document.getElementById('tm-dashboard-extras-style'))return;
@@ -30,6 +31,23 @@
     box.innerHTML=`<small>Fees del mes</small><b>${fmt(total)}</b>`;
   }
 
+  function operationalCounters(){
+    const rows=getRows();
+    const carrierLate=rows.filter(r=>(+r.carrierAmt||+r.downPayment||0)>0&&r.carrierDue&&String(r.carrierStatus||'').toLowerCase()!=='pagado'&&dayDiff(r.carrierDue)<0).length;
+    let deferredNear=0;
+    rows.forEach(r=>{
+      if(Array.isArray(r.deferredPlan)&&r.deferredPlan.length){
+        deferredNear+=r.deferredPlan.filter(p=>(+p.remaining||0)>0&&p.date&&dayDiff(p.date)<=7).length;
+      }else if((+r.pending||0)>0&&r.defDate&&dayDiff(r.defDate)<=7){deferredNear++;}
+    });
+    const tasks=Array.isArray(S?.t)?S.t.filter(t=>!t.done&&String(t.status||'').toLowerCase()!=='realizada').length:0;
+    const late=document.getElementById('lateCarrier'),near=document.getElementById('nearDef'),task=document.getElementById('taskN'),alert=document.getElementById('alertN');
+    if(late)late.textContent=carrierLate;
+    if(near)near.textContent=deferredNear;
+    if(task)task.textContent=tasks;
+    if(alert){const proc=+(document.getElementById('procN')?.textContent||0);alert.textContent=carrierLate+deferredNear+proc;}
+  }
+
   function readActivity(){
     try{return JSON.parse(localStorage.getItem('tmic_a')||'[]')}catch(_){return[]}
   }
@@ -45,10 +63,10 @@
     box.innerHTML=`<h3>Último acceso del equipo</h3><div class="sub">Muestra la última vez que cada usuario autorizado abrió el Income Center.</div><div class="tm-team-grid">${rows.length?rows.map(x=>`<div class="tm-team-person"><b>${esc(x.name||x.email||'Usuario')}</b><span>${esc(x.email||'')}</span><strong>Último acceso: ${esc(fmtAccess(x.lastAccess))}</strong></div>`).join(''):'<div class="sub">Los accesos comenzarán a registrarse desde esta actualización.</div>'}</div>`;
   }
 
-  function apply(){try{style();feeBadge();teamActivity()}catch(e){console.error('TrueMate dashboard extras',e)}}
+  function apply(){try{style();feeBadge();operationalCounters();teamActivity()}catch(e){console.error('TrueMate dashboard extras',e)}}
   const prior=window.render;if(typeof prior==='function')window.render=function(){prior();setTimeout(apply,180)};
-  document.getElementById('mo')?.addEventListener('change',()=>setTimeout(feeBadge,120));
-  document.getElementById('yr')?.addEventListener('change',()=>setTimeout(feeBadge,120));
-  setInterval(()=>{feeBadge();teamActivity()},5000);
+  document.getElementById('mo')?.addEventListener('change',()=>setTimeout(()=>{feeBadge();operationalCounters()},120));
+  document.getElementById('yr')?.addEventListener('change',()=>setTimeout(()=>{feeBadge();operationalCounters()},120));
+  setInterval(()=>{feeBadge();operationalCounters();teamActivity()},5000);
   setTimeout(apply,250);
 })();
