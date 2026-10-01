@@ -1,79 +1,12 @@
 (() => {
-  if (window.__tmCarrierCardFinalLoaded) return;
+  // Legacy compatibility shim.
+  // The authoritative dashboard card is carrier-global-card-v3.js.
+  // This file intentionally does NOT render or observe the dashboard anymore,
+  // because the two renderers were fighting each other after month changes.
   window.__tmCarrierCardFinalLoaded = true;
-
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const fmt=v=>typeof money==='function'?money(v):new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+v||0);
-  const fmtDate=v=>{if(!v)return'—';const d=new Date(v+'T12:00:00');return Number.isNaN(d.getTime())?esc(v):d.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'})};
-  const amountOf=r=>Math.max(+r.carrierAmt||0,+r.downPayment||0);
-  const isPaid=r=>String(r.carrierStatus||'').toLowerCase()==='pagado';
-  const isIncomplete=r=>!(r.carrier&&r.carrierDue);
-  let repairing=false;
-
-  function dayInfo(due){
-    if(!due)return['Completar','tm-days-warn'];
-    const d=new Date(due+'T12:00:00');if(Number.isNaN(d.getTime()))return['—','tm-days-ok'];
-    const n=new Date(),t=new Date(n.getFullYear(),n.getMonth(),n.getDate(),12),diff=Math.ceil((d-t)/86400000);
-    if(diff<0)return['Vencido','tm-days-danger'];
-    if(diff===0)return['Hoy','tm-days-danger'];
-    if(diff<=3)return[`${diff} día${diff===1?'':'s'}`,'tm-days-danger'];
-    if(diff<=7)return[`${diff} días`,'tm-days-warn'];
-    return[`${diff} días`,'tm-days-ok'];
-  }
-
-  window.tmFinalOpenCarrier=function(id){
-    if(typeof window.tmEditCarrierObligation==='function') return window.tmEditCarrierObligation(id);
-    if(typeof window.go==='function') return window.go('carrier');
+  window.tmRefreshFinalCarrierCard = function(){
+    if(typeof window.tmRefreshGlobalCarrierCard==='function'){
+      return window.tmRefreshGlobalCarrierCard();
+    }
   };
-
-  function renderFinalCarrierCard(){
-    const grid=document.querySelector('#summary .grid2');
-    if(!grid||grid.children.length<2)return;
-    const card=grid.children[1];
-    const rows=(Array.isArray(window.S?.r)?S.r:[])
-      .filter(r=>amountOf(r)>0&&!isPaid(r))
-      .slice()
-      .sort((a,b)=>{
-        const ai=isIncomplete(a),bi=isIncomplete(b);
-        if(ai!==bi)return ai?-1:1;
-        return String(a.carrierDue||'9999-12-31').localeCompare(String(b.carrierDue||'9999-12-31'));
-      })
-      .slice(0,8);
-
-    repairing=true;
-    card.innerHTML=`<div data-tm-final-carrier-card="1"><div class="head"><div><h3>Próximos pagos a Carrier / MGA / PFA</h3><div class="sub" style="display:block!important">Pendientes globales: siguen aquí aunque pertenezcan a meses anteriores.</div></div><button class="btn soft" type="button" onclick="go('carrier')">Ver todos los pagos →</button></div>
-      <div class="tablewrap"><table><thead><tr><th>Carrier / MGA / PFA</th><th>Cliente</th><th>Invoice</th><th>Monto a pagar</th><th>Fecha límite</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
-      ${rows.length?rows.map(r=>{const incomplete=isIncomplete(r);const [txt,cls]=dayInfo(r.carrierDue);return `<tr style="cursor:pointer" onclick="tmFinalOpenCarrier('${r.id}')"><td><b>${esc(r.carrier||'Pendiente de completar')}</b></td><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td><b>${fmt(amountOf(r))}</b></td><td>${fmtDate(r.carrierDue)}</td><td><span class="tm-days ${cls}">${txt}</span></td><td><button class="tm-open-pay ${incomplete?'setup':''}" onclick="event.stopPropagation();tmFinalOpenCarrier('${r.id}')">${incomplete?'Completar':'Abrir'}</button></td></tr>`}).join(''):'<tr><td colspan="7" style="color:#6d7d92">Sin obligaciones pendientes a Carrier / MGA / PFA.</td></tr>'}
-      </tbody></table></div></div>`;
-    queueMicrotask(()=>{repairing=false});
-  }
-
-  function ensureFinalCard(){
-    if(repairing)return;
-    const grid=document.querySelector('#summary .grid2');
-    if(!grid||grid.children.length<2)return;
-    const card=grid.children[1];
-    if(!card.querySelector('[data-tm-final-carrier-card="1"]')) renderFinalCarrierCard();
-  }
-
-  function scheduleRepair(){
-    [0,40,120,260,500,900].forEach(ms=>setTimeout(ensureFinalCard,ms));
-  }
-
-  window.tmRefreshFinalCarrierCard=renderFinalCarrierCard;
-  const prior=window.render;
-  if(typeof prior==='function')window.render=function(){const out=prior.apply(this,arguments);scheduleRepair();return out;};
-
-  document.getElementById('mo')?.addEventListener('change',scheduleRepair);
-  document.getElementById('yr')?.addEventListener('change',scheduleRepair);
-
-  const observer=new MutationObserver(()=>{
-    if(repairing)return;
-    requestAnimationFrame(ensureFinalCard);
-  });
-  const summary=document.getElementById('summary');
-  if(summary) observer.observe(summary,{childList:true,subtree:true});
-
-  setTimeout(renderFinalCarrierCard,350);
-  setTimeout(renderFinalCarrierCard,1000);
 })();
