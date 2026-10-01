@@ -49,7 +49,10 @@
   }
 
   function refreshFinalCarrierSoon(){
-    [0,60,180,400,800].forEach(ms=>setTimeout(()=>window.tmRefreshFinalCarrierCard?.(),ms));
+    [0,60,180,400,800].forEach(ms=>setTimeout(()=>{
+      if(typeof window.tmRefreshGlobalCarrierCard==='function')window.tmRefreshGlobalCarrierCard();
+      else window.tmRefreshFinalCarrierCard?.();
+    },ms));
   }
 
   function refreshMonthViews(){
@@ -146,21 +149,14 @@
 
   function improvePendingCarrierShortcut(){
     const b=$('tmCarrierPendingCount');if(!b)return;
-    const rows=(()=>{try{return Array.isArray(S?.r)?S.r:[]}catch(_){return[]}})();
+    let rows=[];
+    try{rows=JSON.parse(localStorage.getItem('tmic_r')||'[]')}catch(_){rows=[]}
+    if(!Array.isArray(rows))rows=[];
     const pending=rows.filter(r=>Math.max(+r.downPayment||0,+r.carrierAmt||0)>0&&!(r.carrier&&r.carrierDue)&&String(r.carrierStatus||'').toLowerCase()!=='pagado');
     if(pending.length===1){
       b.title='Abrir el único Carrier/PFA pendiente de completar';
       b.onclick=()=>{if(typeof window.tmEditCarrierObligation==='function')window.tmEditCarrierObligation(pending[0].id);else if(typeof window.go==='function')window.go('carrier')};
     }
-  }
-
-  function loadFinalCarrierCard(){
-    if(document.getElementById('tm-carrier-card-final')||window.__tmCarrierCardFinalLoaded)return;
-    const s=document.createElement('script');
-    s.id='tm-carrier-card-final';
-    s.src='/carrier-card-final.js?v=2';
-    s.onload=()=>setTimeout(()=>window.tmRefreshFinalCarrierCard?.(),60);
-    document.head.appendChild(s);
   }
 
   const priorOpen=window.openModal;
@@ -175,7 +171,6 @@
   function boot(){
     if(!installSelectors()){setTimeout(boot,120);return;}
     installSaveWarning();
-    loadFinalCarrierCard();
     setTimeout(()=>{refreshMonthViews();improvePendingCarrierShortcut()},350);
     setTimeout(()=>{improvePendingCarrierShortcut();refreshFinalCarrierSoon()},1200);
   }
