@@ -10,4 +10,13 @@
   function apply(){try{reconcile();const n=overdueRows().length;const count=$('lateCarrier');if(count)count.textContent=n;const card=count?.closest('.alert');if(card){card.onclick=popup;card.title='Ver Carrier/PFA vencidos';card.style.cursor='pointer';}}catch(e){console.error('carrier overdue fix',e)}}
   const old=window.render;if(typeof old==='function')window.render=function(){old();setTimeout(apply,180)};
   setTimeout(apply,500);setInterval(apply,4000);
+
+  // Load final admin UI cleanup after the other workflow scripts finish loading.
+  setTimeout(()=>{
+    if(document.getElementById('tm-admin-ui-cleanup'))return;
+    const s=document.createElement('script');
+    s.id='tm-admin-ui-cleanup';
+    s.src='/admin-ui-cleanup.js?v=1';
+    document.head.appendChild(s);
+  },1200);
 })();
