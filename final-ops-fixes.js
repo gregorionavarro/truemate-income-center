@@ -15,8 +15,25 @@
       .tm-carrier-row{cursor:pointer}.tm-carrier-row:hover{background:#f7fbff}
       .tm-open-carrier{border:0;background:#edf4fb;color:#174675;border-radius:8px;padding:7px 10px;font-weight:900;cursor:pointer}
       .tm-paid-date{display:none}.tm-paid-date.on{display:block}
+      .tm-carrier-status{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900}
+      .tm-carrier-status.paid{background:#e6f7ee;color:#16754c}
+      .tm-carrier-status.pending{background:#fff3d4;color:#956d0a}
+      .tm-carrier-status.incomplete{background:#fff0d9;color:#946515}
     `;
     document.head.appendChild(s);
+  }
+
+  function toast(msg){
+    let x=$('tm-carrier-toast');
+    if(!x){x=document.createElement('div');x.id='tm-carrier-toast';x.style.cssText='position:fixed;right:22px;top:58px;z-index:99999;background:#173f69;color:#fff;padding:12px 16px;border-radius:12px;font-weight:800;box-shadow:0 12px 28px rgba(0,0,0,.20)';document.body.appendChild(x)}
+    x.textContent=msg;x.style.display='block';clearTimeout(x._t);x._t=setTimeout(()=>x.style.display='none',2600);
+  }
+
+  function persist(){
+    localStorage.setItem('tmic_r',JSON.stringify(S.r||[]));
+    localStorage.setItem('tmic_t',JSON.stringify(S.t||[]));
+    localStorage.setItem('tmic_p',JSON.stringify(S.p||[]));
+    localStorage.setItem('tmic_c',JSON.stringify(S.c||[]));
   }
 
   function dedupeDeleteButtons(){
@@ -55,21 +72,31 @@
     st.onchange=syncPaid; syncPaid();
     o.querySelector('#tmOpCancel').onclick=()=>o.remove();
     o.querySelector('#tmOpSave').onclick=()=>{
-      r.carrier=o.querySelector('#tmOpCarrier').value;
-      r.carrierAmt=+(o.querySelector('#tmOpAmount').value||0);
-      r.downPayment=r.downPayment||r.carrierAmt;
-      r.carrierDue=o.querySelector('#tmOpDue').value;
-      r.note=o.querySelector('#tmOpNote').value;
+      const newCarrier=o.querySelector('#tmOpCarrier').value;
+      const newAmt=+(o.querySelector('#tmOpAmount').value||0);
+      const newDue=o.querySelector('#tmOpDue').value;
+      const newNote=o.querySelector('#tmOpNote').value;
       let newStatus=st.value;
-      const complete=!!r.carrier&&!!r.carrierDue;
+      const complete=!!newCarrier&&!!newDue;
       if(newStatus==='Pagado'&&!paid.value) return alert('Coloca la fecha de pago al Carrier.');
       if(!complete&&newStatus!=='Pagado'&&newStatus!=='No aplica') newStatus='Pendiente de completar';
       if(complete&&newStatus==='Pendiente de completar') newStatus='Pendiente';
+
+      r.carrier=newCarrier;
+      r.carrierAmt=newAmt;
+      r.downPayment=r.downPayment||newAmt;
+      r.carrierDue=newDue;
+      r.note=newNote;
       r.carrierStatus=newStatus;
       r.carrierPaidDate=newStatus==='Pagado'?paid.value:'';
       r.carrierNeedsCompletion=!complete&&newStatus!=='Pagado'&&newStatus!=='No aplica';
-      try{store();o.remove();render();alert(newStatus==='Pagado'?'Pago al Carrier registrado correctamente.':'Carrier/PFA actualizado correctamente.');}
-      catch(e){console.error(e);alert('No se pudo guardar el Carrier/PFA.');}
+
+      try{persist();}
+      catch(e){console.error('Error persistiendo Carrier/PFA',e);return alert('No se pudo guardar el Carrier/PFA.');}
+
+      o.remove();
+      toast(newStatus==='Pagado'?'Pago al Carrier guardado correctamente.':'Carrier/PFA actualizado correctamente.');
+      setTimeout(()=>{try{render();}catch(e){console.warn('Render posterior al guardado',e)}},20);
     };
   };
 
@@ -88,12 +115,18 @@
     card.innerHTML=`<div class="head"><div><h3>Próximos pagos a Carrier / MGA / PFA</h3></div><button class="btn soft" type="button" onclick="go('carrier')">Ver todos los pagos →</button></div><div class="tablewrap"><table><thead><tr><th>Carrier / MGA / PFA</th><th>Cliente</th><th>Invoice</th><th>Monto a pagar</th><th>Fecha límite</th><th>Días restantes</th><th>Acción</th></tr></thead><tbody>${rows.length?rows.map(r=>{const [txt,cls]=daysLabel(r.carrierDue);return `<tr class="tm-carrier-row" onclick="tmEditCarrierObligation('${r.id}')"><td><b>${esc(r.carrier||'Pendiente de completar')}</b></td><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td><b>${fmt(r.carrierAmt||r.downPayment)}</b></td><td>${fmtDate(r.carrierDue)}</td><td><span class="tm-days ${cls}">${txt}</span></td><td><button class="tm-open-carrier" onclick="event.stopPropagation();tmEditCarrierObligation('${r.id}')">Abrir</button></td></tr>`}).join(''):'<tr><td colspan="7">Sin pagos pendientes a Carrier / MGA / PFA.</td></tr>'}</tbody></table></div>`;
   }
 
+  function statusBadge(r){
+    const s=String(r.carrierStatus||'Pendiente de completar');
+    const c=s==='Pagado'?'paid':s==='Pendiente de completar'?'incomplete':'pending';
+    return `<span class="tm-carrier-status ${c}">${esc(s)}</span>`;
+  }
+
   function enhanceCarrierTable(){
     const body=$('carBody'); if(!body)return;
     const table=body.closest('table'),hr=table?.querySelector('thead tr');
     if(hr) hr.innerHTML='<th>Cliente</th><th>Invoice</th><th>Carrier/PFA</th><th>Monto</th><th>Fecha límite</th><th>Estado</th><th>Fecha pago</th><th>Acción</th>';
     const rows=(S.r||[]).filter(r=>(+r.carrierAmt||+r.downPayment)>0);
-    body.innerHTML=rows.map(r=>`<tr><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td>${esc(r.carrier||'—')}</td><td><b>${fmt(r.carrierAmt||r.downPayment)}</b></td><td>${fmtDate(r.carrierDue)}</td><td>${esc(r.carrierStatus||'Pendiente de completar')}</td><td>${fmtDate(r.carrierPaidDate)}</td><td><button class="btn soft" onclick="tmEditCarrierObligation('${r.id}')">${r.carrier&&r.carrierDue?'Editar':'Completar'}</button></td></tr>`).join('')||'<tr><td colspan="8">Sin obligaciones</td></tr>';
+    body.innerHTML=rows.map(r=>`<tr><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td>${esc(r.carrier||'—')}</td><td><b>${fmt(r.carrierAmt||r.downPayment)}</b></td><td>${fmtDate(r.carrierDue)}</td><td>${statusBadge(r)}</td><td>${fmtDate(r.carrierPaidDate)}</td><td><button class="btn soft" onclick="tmEditCarrierObligation('${r.id}')">${r.carrier&&r.carrierDue?'Editar':'Completar'}</button></td></tr>`).join('')||'<tr><td colspan="8">Sin obligaciones</td></tr>';
   }
 
   function apply(){ensureStyle();dedupeDeleteButtons();renderUpcomingCarrier();enhanceCarrierTable();}
