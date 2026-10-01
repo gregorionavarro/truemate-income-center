@@ -39,3 +39,23 @@ export async function onRequestGet(context){
   const result=await DB.prepare(sql).bind(...binds).all();
   return response({ok:true,events:result.results||[]});
 }
+
+export async function onRequestPost(context){
+  const email=emailFrom(context.request);
+  if(!email) return response({ok:false,error:"Authentication required"},401);
+  const {DB}=context.env;if(!DB)return response({ok:false,error:"D1 binding DB no disponible"},500);
+  await ensure(DB);
+  let body;
+  try{body=await context.request.json();}catch(_){return response({ok:false,error:"JSON inválido"},400);}
+  const module=String(body?.module||'').trim();
+  const action=String(body?.action||'').trim();
+  if(!module||!action) return response({ok:false,error:"module y action son requeridos"},400);
+  const userName=String(body?.user_name||body?.userName||'Usuario').trim().slice(0,120);
+  const ref=String(body?.ref||'').trim().slice(0,200);
+  const detail=String(body?.detail||'').trim().slice(0,2000);
+  const before=body?.before===undefined||body?.before===null?null:JSON.stringify(body.before).slice(0,12000);
+  const after=body?.after===undefined||body?.after===null?null:JSON.stringify(body.after).slice(0,12000);
+  await DB.prepare(`INSERT INTO audit_events (user_email,user_name,module,action,ref,detail,before_json,after_json) VALUES (?,?,?,?,?,?,?,?)`)
+    .bind(email,userName,module,action,ref,detail,before,after).run();
+  return response({ok:true});
+}
