@@ -58,6 +58,7 @@
       if(typeof window.tmRefreshSummaryPayments==='function') window.tmRefreshSummaryPayments();
       if(typeof window.tmRefreshStableDashboard==='function') window.tmRefreshStableDashboard();
       if(typeof window.tmRefreshDashboardExtras==='function') window.tmRefreshDashboardExtras();
+      if(typeof window.tmRefreshFinalCarrierCard==='function') window.tmRefreshFinalCarrierCard();
       updatePeriodText();
     }catch(e){console.warn('Month refresh',e)}
     setTimeout(()=>{refreshing=false},80);
@@ -148,6 +149,15 @@
     }
   }
 
+  function loadFinalCarrierCard(){
+    if(document.getElementById('tm-carrier-card-final')||window.__tmCarrierCardFinalLoaded)return;
+    const s=document.createElement('script');
+    s.id='tm-carrier-card-final';
+    s.src='/carrier-card-final.js?v=1';
+    s.onload=()=>setTimeout(()=>window.tmRefreshFinalCarrierCard?.(),60);
+    document.head.appendChild(s);
+  }
+
   const priorOpen=window.openModal;
   if(typeof priorOpen==='function'){
     window.openModal=function(){
@@ -160,8 +170,9 @@
   function boot(){
     if(!installSelectors()){setTimeout(boot,120);return;}
     installSaveWarning();
+    loadFinalCarrierCard();
     setTimeout(()=>{refreshMonthViews();improvePendingCarrierShortcut()},350);
-    setTimeout(improvePendingCarrierShortcut,1200);
+    setTimeout(()=>{improvePendingCarrierShortcut();window.tmRefreshFinalCarrierCard?.()},1200);
   }
   boot();
 })();
