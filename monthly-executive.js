@@ -3,7 +3,7 @@
   window.__tmMonthlyExecutiveLoaded = true;
 
   const $ = id => document.getElementById(id);
-  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const fmt = v => typeof money === 'function' ? money(v) : new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+v||0);
   const rowsAll = () => Array.isArray(window.S?.r) ? S.r : (typeof S !== 'undefined' && Array.isArray(S.r) ? S.r : []);
   const monthKey = () => {
@@ -12,6 +12,8 @@
     return `${y}-${String(m).padStart(2,'0')}`;
   };
   const monthRows = () => rowsAll().filter(r => String(r.date||'').slice(0,7) === monthKey());
+  const carrierPaidDate = r => String(r.carrierPaidDate || r.carrierPaidAt || r.date || '').slice(0,10);
+  const carrierMonthRows = () => rowsAll().filter(r => r.carrierStatus==='Pagado' && (+r.carrierAmt||0)>0 && carrierPaidDate(r).slice(0,7)===monthKey());
   const monthLabel = () => {
     const names=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
     const mi = Math.max(0,(+($('mo')?.value||1))-1);
@@ -45,9 +47,9 @@
   }
 
   function carrierDetail(name){
-    const rows=monthRows().filter(r=>r.carrier===name && r.carrierStatus==='Pagado' && (+r.carrierAmt||0)>0).slice().sort((a,b)=>(b.carrierDue||b.date||'').localeCompare(a.carrierDue||a.date||''));
+    const rows=carrierMonthRows().filter(r=>r.carrier===name).slice().sort((a,b)=>carrierPaidDate(b).localeCompare(carrierPaidDate(a)));
     const total=rows.reduce((a,r)=>a+(+r.carrierAmt||0),0);
-    popup(`Aseguradora · ${esc(name)} · ${esc(monthLabel())}`,`<div class="tm-exec-summary"><div class="tm-exec-kpi"><small>Total pagado mes</small><b>${fmt(total)}</b></div><div class="tm-exec-kpi"><small>Pagos</small><b>${rows.length}</b></div><div class="tm-exec-kpi"><small>Clientes</small><b>${new Set(rows.map(r=>r.client)).size}</b></div></div><div class="tablewrap"><table class="tm-exec-detail-table"><thead><tr><th>Fecha</th><th>Cliente</th><th>Invoice</th><th>Monto</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.carrierDue||r.date||'')}</td><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td><b>${fmt(r.carrierAmt)}</b></td></tr>`).join('')||'<tr><td colspan="4">Sin pagos registrados en este mes.</td></tr>'}</tbody></table></div>`);
+    popup(`Aseguradora · ${esc(name)} · ${esc(monthLabel())}`,`<div class="tm-exec-summary"><div class="tm-exec-kpi"><small>Total pagado mes</small><b>${fmt(total)}</b></div><div class="tm-exec-kpi"><small>Pagos</small><b>${rows.length}</b></div><div class="tm-exec-kpi"><small>Clientes</small><b>${new Set(rows.map(r=>r.client)).size}</b></div></div><div class="tablewrap"><table class="tm-exec-detail-table"><thead><tr><th>Fecha pago</th><th>Cliente</th><th>Invoice</th><th>Monto</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(carrierPaidDate(r)||'')}</td><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td><b>${fmt(r.carrierAmt)}</b></td></tr>`).join('')||'<tr><td colspan="4">Sin pagos registrados en este mes.</td></tr>'}</tbody></table></div>`);
   }
 
   function methodDetail(name){
@@ -76,9 +78,9 @@
     const pAgg={},cAgg={},mAgg={};
     rows.forEach(r=>{
       if(r.producer)pAgg[r.producer]=(pAgg[r.producer]||0)+(+r.agencyFee||0);
-      if(r.carrier&&r.carrierStatus==='Pagado')cAgg[r.carrier]=(cAgg[r.carrier]||0)+(+r.carrierAmt||0);
       if(r.method)mAgg[r.method]=(mAgg[r.method]||0)+(+r.gross||0);
     });
+    carrierMonthRows().forEach(r=>{if(r.carrier)cAgg[r.carrier]=(cAgg[r.carrier]||0)+(+r.carrierAmt||0)});
     const sort=o=>Object.entries(o).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
     renderCard(cards[0],'Top Producers · Mes',sort(pAgg),'producer','');
     renderCard(cards[1],'Pagos a aseguradoras · Mes',sort(cAgg),'carrier','blue');
