@@ -21,6 +21,33 @@
     try{localStorage.setItem(MONTH_KEY,s.m);localStorage.setItem(YEAR_KEY,s.y)}catch(_){ }
   }
 
+  function improvePeriodUI(){
+    const mo=$('mo'),yr=$('yr');if(!mo||!yr)return;
+    const host=mo.parentElement;if(!host||host.dataset.tmPeriodUi)return;
+    host.dataset.tmPeriodUi='1';
+    host.classList.add('tm-period-picker');
+    const tag=document.createElement('div');
+    tag.className='tm-period-label';
+    tag.innerHTML='<span>PERÍODO</span><b id="tmPeriodText"></b>';
+    host.insertBefore(tag,mo);
+    const st=document.createElement('style');
+    st.id='tm-period-style';
+    st.textContent=`
+      .tm-period-picker{display:grid!important;grid-template-columns:auto auto;grid-template-areas:'label label' 'month year';gap:7px 8px;align-items:center;background:#f7fbff;border:1px solid #d7e5f2;border-radius:14px;padding:10px 12px;box-shadow:0 4px 14px rgba(23,63,105,.06);min-width:245px}
+      .tm-period-label{grid-area:label;display:flex;align-items:center;justify-content:space-between;gap:12px}.tm-period-label span{font-size:9px;font-weight:900;letter-spacing:.65px;color:#6d7d92}.tm-period-label b{font-size:12px;color:#173f69}
+      .tm-period-picker #mo{grid-area:month}.tm-period-picker #yr{grid-area:year}.tm-period-picker .month{margin:0!important;border:1px solid #c8daea!important;background:#fff!important;color:#173f69!important;font-weight:800!important;padding:9px 11px!important;min-width:108px!important;cursor:pointer}
+      .tm-period-picker #yr{min-width:82px!important}
+      @media(max-width:700px){.tm-period-picker{min-width:0;width:100%}}
+    `;
+    document.head.appendChild(st);
+    updatePeriodText();
+  }
+
+  function updatePeriodText(){
+    const s=selected(),el=$('tmPeriodText');
+    if(el)el.textContent=label(s.y,s.m);
+  }
+
   function refreshMonthViews(){
     if(refreshing)return;
     refreshing=true;
@@ -29,7 +56,9 @@
       if(typeof window.tmRefreshMonthlyExecutive==='function') window.tmRefreshMonthlyExecutive();
       if(typeof window.tmRefreshRecentMovements==='function') window.tmRefreshRecentMovements();
       if(typeof window.tmRefreshSummaryPayments==='function') window.tmRefreshSummaryPayments();
+      if(typeof window.tmRefreshStableDashboard==='function') window.tmRefreshStableDashboard();
       if(typeof window.tmRefreshDashboardExtras==='function') window.tmRefreshDashboardExtras();
+      updatePeriodText();
     }catch(e){console.warn('Month refresh',e)}
     setTimeout(()=>{refreshing=false},80);
   }
@@ -41,6 +70,8 @@
     try{m=localStorage.getItem(MONTH_KEY)||'';y=localStorage.getItem(YEAR_KEY)||''}catch(_){ }
     if(m&&[...mo.options].some(o=>o.value===m))mo.value=m;
     if(y&&[...yr.options].some(o=>o.value===y))yr.value=y;
+    improvePeriodUI();
+    updatePeriodText();
     setTimeout(refreshMonthViews,30);
     return true;
   }
@@ -49,11 +80,11 @@
     const mo=$('mo'),yr=$('yr');if(!mo||!yr)return false;
     if(!mo.dataset.tmMonthPersist){
       mo.dataset.tmMonthPersist='1';
-      mo.addEventListener('change',()=>{persist();setTimeout(refreshMonthViews,30)});
+      mo.addEventListener('change',()=>{persist();updatePeriodText();setTimeout(refreshMonthViews,30)});
     }
     if(!yr.dataset.tmMonthPersist){
       yr.dataset.tmMonthPersist='1';
-      yr.addEventListener('change',()=>{persist();setTimeout(refreshMonthViews,30)});
+      yr.addEventListener('change',()=>{persist();updatePeriodText();setTimeout(refreshMonthViews,30)});
     }
     restore();
     return true;
