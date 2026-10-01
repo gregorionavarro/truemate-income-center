@@ -5,9 +5,10 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt=v=>typeof money==='function'?money(v):new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+v||0);
   const fmtDate=v=>{if(!v)return'—';const d=new Date(v+'T12:00:00');return Number.isNaN(d.getTime())?esc(v):d.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'})};
-  const amountOf=r=>+r.carrierAmt||+r.downPayment||0;
+  const amountOf=r=>Math.max(+r.carrierAmt||0,+r.downPayment||0);
   const isPaid=r=>String(r.carrierStatus||'').toLowerCase()==='pagado';
   const isIncomplete=r=>!(r.carrier&&r.carrierDue);
+  let repairing=false;
 
   function dayInfo(due){
     if(!due)return['Completar','tm-days-warn'];
@@ -39,17 +40,40 @@
       })
       .slice(0,8);
 
-    card.innerHTML=`<div class="head"><div><h3>Próximos pagos a Carrier / MGA / PFA</h3><div class="sub" style="display:block!important">Pendientes globales: siguen aquí aunque pertenezcan a meses anteriores.</div></div><button class="btn soft" type="button" onclick="go('carrier')">Ver todos los pagos →</button></div>
+    repairing=true;
+    card.innerHTML=`<div data-tm-final-carrier-card="1"><div class="head"><div><h3>Próximos pagos a Carrier / MGA / PFA</h3><div class="sub" style="display:block!important">Pendientes globales: siguen aquí aunque pertenezcan a meses anteriores.</div></div><button class="btn soft" type="button" onclick="go('carrier')">Ver todos los pagos →</button></div>
       <div class="tablewrap"><table><thead><tr><th>Carrier / MGA / PFA</th><th>Cliente</th><th>Invoice</th><th>Monto a pagar</th><th>Fecha límite</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
       ${rows.length?rows.map(r=>{const incomplete=isIncomplete(r);const [txt,cls]=dayInfo(r.carrierDue);return `<tr style="cursor:pointer" onclick="tmFinalOpenCarrier('${r.id}')"><td><b>${esc(r.carrier||'Pendiente de completar')}</b></td><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td><b>${fmt(amountOf(r))}</b></td><td>${fmtDate(r.carrierDue)}</td><td><span class="tm-days ${cls}">${txt}</span></td><td><button class="tm-open-pay ${incomplete?'setup':''}" onclick="event.stopPropagation();tmFinalOpenCarrier('${r.id}')">${incomplete?'Completar':'Abrir'}</button></td></tr>`}).join(''):'<tr><td colspan="7" style="color:#6d7d92">Sin obligaciones pendientes a Carrier / MGA / PFA.</td></tr>'}
-      </tbody></table></div>`;
+      </tbody></table></div></div>`;
+    queueMicrotask(()=>{repairing=false});
+  }
+
+  function ensureFinalCard(){
+    if(repairing)return;
+    const grid=document.querySelector('#summary .grid2');
+    if(!grid||grid.children.length<2)return;
+    const card=grid.children[1];
+    if(!card.querySelector('[data-tm-final-carrier-card="1"]')) renderFinalCarrierCard();
+  }
+
+  function scheduleRepair(){
+    [0,40,120,260,500,900].forEach(ms=>setTimeout(ensureFinalCard,ms));
   }
 
   window.tmRefreshFinalCarrierCard=renderFinalCarrierCard;
   const prior=window.render;
-  if(typeof prior==='function')window.render=function(){const out=prior.apply(this,arguments);setTimeout(renderFinalCarrierCard,220);return out;};
-  document.getElementById('mo')?.addEventListener('change',()=>setTimeout(renderFinalCarrierCard,240));
-  document.getElementById('yr')?.addEventListener('change',()=>setTimeout(renderFinalCarrierCard,240));
-  setTimeout(renderFinalCarrierCard,500);
-  setTimeout(renderFinalCarrierCard,1400);
+  if(typeof prior==='function')window.render=function(){const out=prior.apply(this,arguments);scheduleRepair();return out;};
+
+  document.getElementById('mo')?.addEventListener('change',scheduleRepair);
+  document.getElementById('yr')?.addEventListener('change',scheduleRepair);
+
+  const observer=new MutationObserver(()=>{
+    if(repairing)return;
+    requestAnimationFrame(ensureFinalCard);
+  });
+  const summary=document.getElementById('summary');
+  if(summary) observer.observe(summary,{childList:true,subtree:true});
+
+  setTimeout(renderFinalCarrierCard,350);
+  setTimeout(renderFinalCarrierCard,1000);
 })();
