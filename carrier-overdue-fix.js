@@ -1,7 +1,7 @@
 (() => {
   if(window.__tmCarrierOverdueFixLoaded)return;window.__tmCarrierOverdueFixLoaded=true;
   const $=id=>document.getElementById(id);
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt=v=>typeof money==='function'?money(v):new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+v||0);
   const daysTo=d=>{if(!d)return 999;const end=new Date(d+'T12:00:00'),now=new Date();now.setHours(12,0,0,0);return Math.ceil((end-now)/864e5)};
   function overdueRows(){return (S.r||[]).filter(r=>{const amt=+(r.carrierAmt||r.downPayment||0);const st=String(r.carrierStatus||'').toLowerCase();return amt>0&&r.carrierDue&&daysTo(r.carrierDue)<0&&st!=='pagado';});}
