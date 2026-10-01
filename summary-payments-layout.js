@@ -38,22 +38,6 @@
     return d.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
   }
 
-  function normalizeRecent(){
-    const body=$('recent'); if(!body) return;
-    const table=body.closest('table'); if(!table) return;
-    const headRow=table.querySelector('thead tr');
-    if(headRow) headRow.innerHTML='<th>Fecha pago</th><th>Cliente</th><th>Invoice</th><th>Neto</th><th>Depósito</th><th>Acción</th>';
-    [...body.querySelectorAll('tr')].forEach(tr=>{
-      const cells=[...tr.children]; if(cells.length<9) return;
-      const client=cells[0],invoice=cells[1],net=cells[6],deposit=cells[7],action=cells[8];
-      const inv=(invoice.textContent||'').trim(),cli=(client.textContent||'').trim();
-      const rec=(Array.isArray(window.S?.r)?S.r:[]).find(r=>String(r.invoice||'').trim()===inv&&String(r.client||'').trim()===cli);
-      const date=document.createElement('td'); date.textContent=formatDate(rec?.date||'');
-      tr.replaceChildren(date,client,invoice,net,deposit,action);
-    });
-    const card=body.closest('.card'); if(card){const btn=card.querySelector('.head .btn.soft');if(btn)btn.textContent='Ver más →';}
-  }
-
   function daysLabel(due){
     if(!due)return{text:'—',cls:'tm-days-ok'};
     const d=new Date(due+'T12:00:00'); if(Number.isNaN(d.getTime()))return{text:'—',cls:'tm-days-ok'};
@@ -82,7 +66,7 @@
       <tbody>${rows.length?rows.map(r=>{const dl=daysLabel(r.carrierDue);return `<tr class="tm-carrier-pay-row" onclick="tmOpenUpcomingCarrierPayment('${r.id}')" title="Abrir pago"><td>${esc(r.carrier||'Pendiente de completar')}</td><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td><b>${fmtMoney(r.carrierAmt||r.downPayment)}</b></td><td>${formatDate(r.carrierDue)}</td><td><span class="tm-days ${dl.cls}">${dl.text}</span></td><td><button class="tm-open-pay" onclick="event.stopPropagation();tmOpenUpcomingCarrierPayment('${r.id}')">Abrir</button></td></tr>`}).join(''):'<tr><td colspan="7" style="color:#6d7d92">Sin pagos pendientes a Carrier / MGA / PFA.</td></tr>'}</tbody></table></div>`;
   }
 
-  function apply(){ensureStyle();normalizeRecent();buildCarrierCard();}
+  function apply(){ensureStyle();buildCarrierCard();}
   window.tmRefreshSummaryPayments=apply;
   const originalRender=window.render;if(typeof originalRender==='function')window.render=function(){originalRender();setTimeout(apply,0)};
   setTimeout(apply,0);
