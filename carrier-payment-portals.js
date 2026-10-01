@@ -3,7 +3,7 @@
   window.__tmCarrierPaymentPortalsLoaded = true;
 
   const $ = id => document.getElementById(id);
-  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const DEFAULT_LINKS = {
     'RPS':'https://rpsins.epaypolicy.com/',
     'Guardian':'https://guardian-ins.epaypolicy.com/',
@@ -61,9 +61,15 @@
   function injectPortalIntoOpenPopup(id){
     const r=(S.r||[]).find(x=>String(x.id)===String(id)); if(!r) return;
     const overlay=document.querySelector('.tm-overlay'); if(!overlay) return;
-    const carrierSel=overlay.querySelector('#tmOpCarrier'); if(!carrierSel) return;
+    const carrierSel=overlay.querySelector('#tmFlexCarrier') || overlay.querySelector('#tmOpCarrier');
+    if(!carrierSel) return;
     let box=overlay.querySelector('.tm-portal-box');
-    if(!box){box=document.createElement('div');box.className='tm-portal-box';carrierSel.closest('.tm-field')?.appendChild(box);}
+    if(!box){
+      box=document.createElement('div');box.className='tm-portal-box';
+      const paySection=overlay.querySelector('.tm-flex-pay') || overlay.querySelector('.tm-pay-box');
+      if(paySection) paySection.insertBefore(box,paySection.firstChild);
+      else carrierSel.closest('.tm-field')?.appendChild(box);
+    }
     const refresh=()=>{
       const carrier=carrierSel.value||r.carrier||'';
       const url=getPortal(carrier);
@@ -75,7 +81,12 @@
   function wrapCarrierPopup(){
     const prior=window.tmEditCarrierObligation;
     if(typeof prior!=='function'||prior.__tmPortalWrapped) return;
-    const wrapped=function(id){prior(id);setTimeout(()=>injectPortalIntoOpenPopup(id),40);};
+    const wrapped=async function(id){
+      const out=prior(id);
+      if(out&&typeof out.then==='function') await out;
+      setTimeout(()=>injectPortalIntoOpenPopup(id),60);
+      return out;
+    };
     wrapped.__tmPortalWrapped=true;
     window.tmEditCarrierObligation=wrapped;
   }
