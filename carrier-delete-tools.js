@@ -19,8 +19,26 @@
     `;document.head.appendChild(s);
   }
 
+  function refreshNow(){
+    try{window.tmRefreshCarrierTable?.();}catch(_){}
+    try{window.tmRefreshRecentMovements?.();}catch(_){}
+    try{window.tmRefreshSummaryPayments?.();}catch(_){}
+    setTimeout(()=>{try{window.tmRefreshCarrierTable?.();window.tmRefreshRecentMovements?.();window.tmRefreshSummaryPayments?.();}catch(_){}},120);
+  }
+
   function persist(){
-    try{localStorage.setItem('tmic_r',JSON.stringify(S.r||[]));localStorage.setItem('tmic_t',JSON.stringify(S.t||[]));if(typeof store==='function')store();if(typeof render==='function')render();setTimeout(()=>window.tmRefreshCarrierTable?.(),80);return true;}catch(e){console.error(e);window.tmNotice?.('No se pudo eliminar el registro.','No se pudo completar','error');return false;}
+    try{
+      localStorage.setItem('tmic_r',JSON.stringify(S.r||[]));
+      localStorage.setItem('tmic_t',JSON.stringify(S.t||[]));
+    }catch(e){
+      console.error('Error guardando eliminación en localStorage',e);
+      window.tmNotice?.('No se pudo guardar la eliminación.','No se pudo completar','error');
+      return false;
+    }
+    try{if(typeof store==='function')store();}catch(e){console.warn('store() después de eliminar',e);}
+    try{if(typeof render==='function')render();}catch(e){console.warn('render() después de eliminar',e);}
+    refreshNow();
+    return true;
   }
 
   function modalFor(r){
