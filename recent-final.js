@@ -43,6 +43,7 @@
       body.innerHTML=rows.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${esc(r.client||'')}</td><td><button class="tm-link" onclick="tmInvoiceDetail('${String(r.invoice||'').replace(/'/g,"\\'")}')">${esc(r.invoice||'')}</button></td><td>${esc(r.producer||'')}</td><td>${esc(r.method||'')}</td><td>${fmt(r.gross)}</td><td>${fmt(r.agencyFee)}</td><td><b>${fmt(r.net)}</b></td><td>${depBadge(r)}</td><td>${carrierBadge(r)}</td><td><div class="tm-actions"><button class="btn soft" onclick="openModal('${r.id}')">Editar</button><button class="btn danger tm-delete" onclick="deleteIncome('${r.id}')">Eliminar</button></div></td></tr>`).join('')||'<tr><td colspan="11">Sin movimientos.</td></tr>';
     }finally{setTimeout(()=>{busy=false},20)}
   }
+  window.tmRefreshRecentMovements=()=>{busy=false;renderRecentFinal();};
   const prior=window.render;if(typeof prior==='function')window.render=function(){prior();setTimeout(renderRecentFinal,120)};
   const observer=new MutationObserver(()=>{if(!busy)setTimeout(renderRecentFinal,30)});
   const start=()=>{const body=document.getElementById('recent');if(body){observer.observe(body,{childList:true,subtree:false});renderRecentFinal()}else setTimeout(start,100)};
