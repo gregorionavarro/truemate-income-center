@@ -8,6 +8,7 @@
   const amountOf=r=>Math.max(+r?.carrierAmt||0,+r?.downPayment||0);
   const isPaid=r=>String(r?.carrierStatus||'').trim().toLowerCase()==='pagado';
   const isIncomplete=r=>!(String(r?.carrier||'').trim()&&String(r?.carrierDue||'').trim());
+  const companyName=r=>String(r?.company||'').trim()||String(r?.client||'').trim()||'—';
   let rendering=false,lastSig='';
 
   function freshRows(){
@@ -19,19 +20,14 @@
   }
 
   function pendingRows(){
-    return freshRows()
-      .filter(r=>amountOf(r)>0&&!isPaid(r))
-      .slice()
-      .sort((a,b)=>{
-        const ai=isIncomplete(a),bi=isIncomplete(b);
-        if(ai!==bi)return ai?-1:1;
-        return String(a.carrierDue||'9999-12-31').localeCompare(String(b.carrierDue||'9999-12-31'));
-      });
+    return freshRows().filter(r=>amountOf(r)>0&&!isPaid(r)).slice().sort((a,b)=>{
+      const ai=isIncomplete(a),bi=isIncomplete(b);
+      if(ai!==bi)return ai?-1:1;
+      return String(a.carrierDue||'9999-12-31').localeCompare(String(b.carrierDue||'9999-12-31'));
+    });
   }
 
-  function sig(rows){
-    return JSON.stringify(rows.map(r=>[r.id,r.invoice,r.client,amountOf(r),r.carrier||'',r.carrierDue||'',r.carrierStatus||'']));
-  }
+  function sig(rows){return JSON.stringify(rows.map(r=>[r.id,r.invoice,companyName(r),amountOf(r),r.carrier||'',r.carrierDue||'',r.carrierStatus||'']))}
 
   function dayInfo(due,incomplete){
     if(incomplete||!due)return['Pendiente de completar','tm-days-warn'];
@@ -49,53 +45,29 @@
     if(typeof window.go==='function')return window.go('carrier');
   };
 
-  function targetCard(){
-    const grid=document.querySelector('#summary .grid2');
-    if(!grid||grid.children.length<2)return null;
-    return grid.children[1];
-  }
+  function targetCard(){const grid=document.querySelector('#summary .grid2');if(!grid||grid.children.length<2)return null;return grid.children[1]}
 
   function render(force=false){
     const card=targetCard();if(!card)return;
-    const rows=pendingRows();
-    const currentSig=sig(rows);
+    const rows=pendingRows(),currentSig=sig(rows);
     if(!force&&currentSig===lastSig&&card.querySelector('[data-tm-global-carrier-v3="1"]'))return;
-    lastSig=currentSig;
-    rendering=true;
+    lastSig=currentSig;rendering=true;
     const show=rows.slice(0,10);
-    card.innerHTML=`<div data-tm-global-carrier-v3="1" data-tm-final-carrier-card="1"><div class="head"><div><h3>Próximos pagos a Carrier / MGA / PFA</h3><div class="sub" style="display:block!important">Pendientes globales · ${rows.length} activo${rows.length===1?'':'s'} · permanecen visibles hasta registrar el pago.</div></div><button class="btn soft" type="button" onclick="go('carrier')">Ver todos los pagos →</button></div><div class="tablewrap"><table><thead><tr><th>Carrier / MGA / PFA</th><th>Cliente</th><th>Invoice</th><th>Monto a pagar</th><th>Fecha límite</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${show.length?show.map(r=>{const incomplete=isIncomplete(r);const [txt,cls]=dayInfo(r.carrierDue,incomplete);return `<tr style="cursor:pointer" onclick="tmGlobalCarrierOpen('${esc(r.id)}')"><td><b>${esc(r.carrier||'Pendiente de completar')}</b></td><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td><b>${fmt(amountOf(r))}</b></td><td>${fmtDate(r.carrierDue)}</td><td><span class="tm-days ${cls}">${esc(txt)}</span></td><td><button class="tm-open-pay ${incomplete?'setup':''}" type="button" onclick="event.stopPropagation();tmGlobalCarrierOpen('${esc(r.id)}')">${incomplete?'Completar':'Abrir'}</button></td></tr>`}).join(''):'<tr><td colspan="7" style="color:#6d7d92">Sin obligaciones pendientes a Carrier / MGA / PFA.</td></tr>'}</tbody></table></div></div>`;
+    card.innerHTML=`<div data-tm-global-carrier-v3="1" data-tm-final-carrier-card="1"><div class="head"><div><h3>Próximos pagos a Carrier / MGA / PFA</h3><div class="sub" style="display:block!important">Pendientes globales · ${rows.length} activo${rows.length===1?'':'s'} · permanecen visibles hasta registrar el pago.</div></div><button class="btn soft" type="button" onclick="go('carrier')">Ver todos los pagos →</button></div><div class="tablewrap"><table><thead><tr><th>Carrier / MGA / PFA</th><th>Cliente</th><th>Invoice</th><th>Monto a pagar</th><th>Fecha límite</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${show.length?show.map(r=>{const incomplete=isIncomplete(r);const [txt,cls]=dayInfo(r.carrierDue,incomplete);return `<tr style="cursor:pointer" onclick="tmGlobalCarrierOpen('${esc(r.id)}')"><td><b>${esc(r.carrier||'Pendiente de completar')}</b></td><td><b>${esc(companyName(r))}</b></td><td>${esc(r.invoice||'')}</td><td><b>${fmt(amountOf(r))}</b></td><td>${fmtDate(r.carrierDue)}</td><td><span class="tm-days ${cls}">${esc(txt)}</span></td><td><button class="tm-open-pay ${incomplete?'setup':''}" type="button" onclick="event.stopPropagation();tmGlobalCarrierOpen('${esc(r.id)}')">${incomplete?'Completar':'Abrir'}</button></td></tr>`}).join(''):'<tr><td colspan="7" style="color:#6d7d92">Sin obligaciones pendientes a Carrier / MGA / PFA.</td></tr>'}</tbody></table></div></div>`;
     requestAnimationFrame(()=>{rendering=false});
   }
 
-  function ensure(){
-    if(rendering)return;
-    const card=targetCard();if(!card)return;
-    if(!card.querySelector('[data-tm-global-carrier-v3="1"]'))render(true);
-    else render(false);
-  }
-
-  function burst(){[0,30,80,160,320,650,1100].forEach(ms=>setTimeout(()=>render(true),ms));}
+  function ensure(){if(rendering)return;const card=targetCard();if(!card)return;if(!card.querySelector('[data-tm-global-carrier-v3="1"]'))render(true);else render(false)}
+  function burst(){[0,30,80,160,320,650,1100].forEach(ms=>setTimeout(()=>render(true),ms))}
 
   window.tmRefreshFinalCarrierCard=()=>render(true);
   window.tmRefreshGlobalCarrierCard=()=>render(true);
-
-  const mo=document.getElementById('mo'),yr=document.getElementById('yr');
-  mo?.addEventListener('change',burst);
-  yr?.addEventListener('change',burst);
-
-  const priorRender=window.render;
-  if(typeof priorRender==='function')window.render=function(){const out=priorRender.apply(this,arguments);burst();return out;};
-
-  const summary=document.getElementById('summary');
-  if(summary){
-    new MutationObserver(()=>{if(!rendering)requestAnimationFrame(ensure)}).observe(summary,{childList:true,subtree:true});
-  }
-
+  document.getElementById('mo')?.addEventListener('change',burst);
+  document.getElementById('yr')?.addEventListener('change',burst);
+  const priorRender=window.render;if(typeof priorRender==='function')window.render=function(){const out=priorRender.apply(this,arguments);burst();return out};
+  const summary=document.getElementById('summary');if(summary)new MutationObserver(()=>{if(!rendering)requestAnimationFrame(ensure)}).observe(summary,{childList:true,subtree:true});
   window.addEventListener('storage',e=>{if(e.key==='tmic_r')burst()});
-  setInterval(()=>{
-    const rows=pendingRows(),s=sig(rows),card=targetCard();
-    if(s!==lastSig||!card?.querySelector('[data-tm-global-carrier-v3="1"]'))render(true);
-  },700);
-
+  window.addEventListener('tm-state-updated',burst);
+  setInterval(()=>{const rows=pendingRows(),s=sig(rows),card=targetCard();if(s!==lastSig||!card?.querySelector('[data-tm-global-carrier-v3="1"]'))render(true)},700);
   burst();
 })();
