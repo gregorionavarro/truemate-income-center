@@ -3,6 +3,20 @@
   window.__tmOwnerLinkLoaded = true;
   const OWNER='gregorio.navarro@truemategroup.com';
 
+  function selectCurrentPeriod(){
+    const mo=document.getElementById('mo'),yr=document.getElementById('yr');
+    if(!mo||!yr)return;
+    const now=new Date();
+    const month=String(now.getMonth()+1).padStart(2,'0');
+    const year=String(now.getFullYear());
+    if(![...yr.options].some(o=>o.value===year||o.textContent===year)){
+      const op=document.createElement('option');op.value=year;op.textContent=year;yr.appendChild(op);
+    }
+    mo.value=month;
+    yr.value=year;
+    try{if(typeof window.render==='function')window.render();}catch(_){ }
+  }
+
   function addRefreshButton(){
     const tabs=document.querySelector('.tabs');
     if(!tabs||document.getElementById('tmManualRefresh'))return;
@@ -36,6 +50,7 @@
   }
 
   async function init(){
+    selectCurrentPeriod();
     addRefreshButton();
     try{
       const r=await fetch('/cdn-cgi/access/get-identity',{cache:'no-store'});
