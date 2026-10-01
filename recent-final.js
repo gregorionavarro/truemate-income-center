@@ -1,7 +1,7 @@
 (() => {
   if (window.__tmRecentFinalLoaded) return;
   window.__tmRecentFinalLoaded = true;
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const fmt=v=>typeof money==='function'?money(v):new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+v||0);
   const fmtDate=v=>{if(!v)return'—';const d=new Date(v+'T12:00:00');return Number.isNaN(d.getTime())?esc(v):d.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'})};
   const depBadge=r=>String(r.depStatus||'').toLowerCase()==='depositado'?'<span class="badge ok">Depositado</span>':'<span class="badge proc">En proceso</span>';
@@ -13,15 +13,16 @@
     return `<button class="tm-mini amber" onclick="tmEditCarrierObligation('${r.id}')">Pendiente de completar</button>`;
   };
   const getRows=()=>{try{return (typeof S!=='undefined'&&S&&Array.isArray(S.r))?S.r:[]}catch(_){return[]}};
+  const selectedMonth=()=>`${document.getElementById('yr')?.value||new Date().getFullYear()}-${document.getElementById('mo')?.value||String(new Date().getMonth()+1).padStart(2,'0')}`;
   let busy=false,expanded=false;
-  function setupHeader(card,total,rows){
+  function setupHeader(card,total){
     const head=card?.querySelector('.head');if(!head)return;
     const h3=head.querySelector('h3');if(h3){h3.textContent='Movimientos recientes';h3.style.cursor=total>5?'pointer':'default';h3.onclick=total>5?()=>{expanded=!expanded;renderRecentFinal()}:null}
-    const sub=head.querySelector('.sub');if(sub)sub.style.display='none';
+    const sub=head.querySelector('.sub');if(sub){sub.style.display='block';sub.textContent='Cobros del mes seleccionado.'}
     let actions=head.querySelector('.tm-recent-head-actions');
     if(!actions){actions=document.createElement('div');actions.className='tm-recent-head-actions';actions.style.cssText='display:flex;gap:8px;align-items:center;margin-left:auto';const existing=head.querySelector('.btn.soft');if(existing){head.insertBefore(actions,existing);actions.appendChild(existing)}else head.appendChild(actions)}
     let pending=actions.querySelector('#tmCarrierPendingCount');
-    const count=rows.filter(r=>hasCarrier(r)&&!carrierComplete(r)&&r.carrierStatus!=='Pagado').length;
+    const count=getRows().filter(r=>hasCarrier(r)&&!carrierComplete(r)&&r.carrierStatus!=='Pagado').length;
     if(count>0){
       if(!pending){pending=document.createElement('button');pending.type='button';pending.id='tmCarrierPendingCount';pending.className='tm-mini amber';actions.insertBefore(pending,actions.firstChild)}
       pending.textContent=`Carrier / PFA por completar: ${count}`;
@@ -36,16 +37,17 @@
       const body=document.getElementById('recent');if(!body)return;
       const card=body.closest('.card'),table=body.closest('table');if(!card||!table)return;
       card.querySelectorAll('.tm-filters,.tm-recent-sort,#tmRecentExpand,.tm-recent-footer').forEach(x=>x.remove());
-      const allRows=getRows().slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
-      setupHeader(card,allRows.length,allRows);
+      const month=selectedMonth();
+      const allRows=getRows().filter(r=>String(r.date||'').slice(0,7)===month).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+      setupHeader(card,allRows.length);
       const hr=table.querySelector('thead tr');if(hr)hr.innerHTML='<th>Fecha pago</th><th>Cliente</th><th>Invoice</th><th>Producer</th><th>Método</th><th>Pagó cliente</th><th>Fee</th><th>Neto</th><th>Depósito</th><th>Carrier / PFA</th><th>Acción</th>';
       const rows=expanded?allRows:allRows.slice(0,5);
-      body.innerHTML=rows.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${esc(r.client||'')}</td><td><button class="tm-link" onclick="tmInvoiceDetail('${String(r.invoice||'').replace(/'/g,"\\'")}')">${esc(r.invoice||'')}</button></td><td>${esc(r.producer||'')}</td><td>${esc(r.method||'')}</td><td>${fmt(r.gross)}</td><td>${fmt(r.agencyFee)}</td><td><b>${fmt(r.net)}</b></td><td>${depBadge(r)}</td><td>${carrierBadge(r)}</td><td><div class="tm-actions"><button class="btn soft" onclick="openModal('${r.id}')">Editar</button><button class="btn danger tm-delete" onclick="deleteIncome('${r.id}')">Eliminar</button></div></td></tr>`).join('')||'<tr><td colspan="11">Sin movimientos.</td></tr>';
+      body.innerHTML=rows.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${esc(r.client||'')}</td><td><button class="tm-link" onclick="tmInvoiceDetail('${String(r.invoice||'').replace(/'/g,"\\'")}')">${esc(r.invoice||'')}</button></td><td>${esc(r.producer||'')}</td><td>${esc(r.method||'')}</td><td>${fmt(r.gross)}</td><td>${fmt(r.agencyFee)}</td><td><b>${fmt(r.net)}</b></td><td>${depBadge(r)}</td><td>${carrierBadge(r)}</td><td><div class="tm-actions"><button class="btn soft" onclick="openModal('${r.id}')">Editar</button><button class="btn danger tm-delete" onclick="deleteIncome('${r.id}')">Eliminar</button></div></td></tr>`).join('')||'<tr><td colspan="11">Sin movimientos en este mes.</td></tr>';
     }finally{setTimeout(()=>{busy=false},20)}
   }
   window.tmRefreshRecentMovements=()=>{busy=false;renderRecentFinal();};
   const prior=window.render;if(typeof prior==='function')window.render=function(){prior();setTimeout(renderRecentFinal,120)};
   const observer=new MutationObserver(()=>{if(!busy)setTimeout(renderRecentFinal,30)});
-  const start=()=>{const body=document.getElementById('recent');if(body){observer.observe(body,{childList:true,subtree:false});renderRecentFinal()}else setTimeout(start,100)};
+  const start=()=>{const body=document.getElementById('recent');if(body){observer.observe(body,{childList:true,subtree:false});renderRecentFinal();document.getElementById('mo')?.addEventListener('change',()=>{expanded=false;setTimeout(renderRecentFinal,20)});document.getElementById('yr')?.addEventListener('change',()=>{expanded=false;setTimeout(renderRecentFinal,20)})}else setTimeout(start,100)};
   start();
 })();
