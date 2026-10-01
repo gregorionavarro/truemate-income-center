@@ -8,6 +8,7 @@
   const $=id=>document.getElementById(id);
   const pad=v=>String(v).padStart(2,'0');
   const label=(y,m)=>`${NAMES[Math.max(0,(+m||1)-1)]} de ${y}`;
+  let refreshing=false;
 
   function selected(){
     const y=$('yr')?.value||String(new Date().getFullYear());
@@ -15,19 +16,22 @@
     return {y:String(y),m:pad(m),key:`${y}-${pad(m)}`};
   }
 
-  function refreshMonthViews(){
-    try{window.tmRefreshRecentMovements?.()}catch(_){ }
-    try{window.tmRefreshSummaryPayments?.()}catch(_){ }
-    try{window.render?.()}catch(_){ }
-    // monthly-executive listens to these events; dispatch after render so its cards
-    // always use the month currently visible in the selectors.
-    try{$('mo')?.dispatchEvent(new Event('change'))}catch(_){ }
-    try{$('yr')?.dispatchEvent(new Event('change'))}catch(_){ }
-  }
-
   function persist(){
     const s=selected();
     try{localStorage.setItem(MONTH_KEY,s.m);localStorage.setItem(YEAR_KEY,s.y)}catch(_){ }
+  }
+
+  function refreshMonthViews(){
+    if(refreshing)return;
+    refreshing=true;
+    try{
+      if(typeof window.render==='function') window.render();
+      if(typeof window.tmRefreshMonthlyExecutive==='function') window.tmRefreshMonthlyExecutive();
+      if(typeof window.tmRefreshRecentMovements==='function') window.tmRefreshRecentMovements();
+      if(typeof window.tmRefreshSummaryPayments==='function') window.tmRefreshSummaryPayments();
+      if(typeof window.tmRefreshDashboardExtras==='function') window.tmRefreshDashboardExtras();
+    }catch(e){console.warn('Month refresh',e)}
+    setTimeout(()=>{refreshing=false},80);
   }
 
   function restore(){
@@ -37,7 +41,7 @@
     try{m=localStorage.getItem(MONTH_KEY)||'';y=localStorage.getItem(YEAR_KEY)||''}catch(_){ }
     if(m&&[...mo.options].some(o=>o.value===m))mo.value=m;
     if(y&&[...yr.options].some(o=>o.value===y))yr.value=y;
-    refreshMonthViews();
+    setTimeout(refreshMonthViews,30);
     return true;
   }
 
@@ -45,11 +49,11 @@
     const mo=$('mo'),yr=$('yr');if(!mo||!yr)return false;
     if(!mo.dataset.tmMonthPersist){
       mo.dataset.tmMonthPersist='1';
-      mo.addEventListener('change',()=>{persist();setTimeout(refreshMonthViews,20)});
+      mo.addEventListener('change',()=>{persist();setTimeout(refreshMonthViews,30)});
     }
     if(!yr.dataset.tmMonthPersist){
       yr.dataset.tmMonthPersist='1';
-      yr.addEventListener('change',()=>{persist();setTimeout(refreshMonthViews,20)});
+      yr.addEventListener('change',()=>{persist();setTimeout(refreshMonthViews,30)});
     }
     restore();
     return true;
@@ -98,6 +102,7 @@
           if(typeof window.tmNotice==='function')window.tmNotice(`El ingreso quedó guardado en ${target}. Tú continúas viendo ${label(s.y,s.m)}.`,'Ingreso guardado en otro mes','warning');
         },250);
       }
+      setTimeout(refreshMonthViews,180);
       return out;
     };
   }
@@ -125,7 +130,7 @@
     if(!installSelectors()){setTimeout(boot,120);return;}
     installSaveWarning();
     setTimeout(()=>{refreshMonthViews();improvePendingCarrierShortcut()},350);
-    setTimeout(()=>{refreshMonthViews();improvePendingCarrierShortcut()},1200);
+    setTimeout(improvePendingCarrierShortcut,1200);
   }
   boot();
 })();
