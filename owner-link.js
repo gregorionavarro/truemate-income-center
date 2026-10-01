@@ -2,19 +2,38 @@
   if (window.__tmOwnerLinkLoaded) return;
   window.__tmOwnerLinkLoaded = true;
   const OWNER='gregorio.navarro@truemategroup.com';
+  const MONTH_KEY='tmic_view_month';
+  const YEAR_KEY='tmic_view_year';
 
-  function selectCurrentPeriod(){
+  function ensureInitialPeriod(){
     const mo=document.getElementById('mo'),yr=document.getElementById('yr');
     if(!mo||!yr)return;
-    const now=new Date();
-    const month=String(now.getMonth()+1).padStart(2,'0');
-    const year=String(now.getFullYear());
-    if(![...yr.options].some(o=>o.value===year||o.textContent===year)){
-      const op=document.createElement('option');op.value=year;op.textContent=year;yr.appendChild(op);
+    let savedMonth='',savedYear='';
+    try{
+      savedMonth=localStorage.getItem(MONTH_KEY)||'';
+      savedYear=localStorage.getItem(YEAR_KEY)||'';
+    }catch(_){ }
+
+    // If the user already chose a period, preserve it after reload/refresh.
+    if(savedMonth && [...mo.options].some(o=>o.value===savedMonth)) mo.value=savedMonth;
+    if(savedYear && [...yr.options].some(o=>o.value===savedYear||o.textContent===savedYear)) yr.value=savedYear;
+
+    // Only default to the real current month when there is no saved selection.
+    if(!savedMonth || !savedYear){
+      const now=new Date();
+      const month=String(now.getMonth()+1).padStart(2,'0');
+      const year=String(now.getFullYear());
+      if(![...yr.options].some(o=>o.value===year||o.textContent===year)){
+        const op=document.createElement('option');op.value=year;op.textContent=year;yr.appendChild(op);
+      }
+      mo.value=month;
+      yr.value=year;
+      try{localStorage.setItem(MONTH_KEY,month);localStorage.setItem(YEAR_KEY,year)}catch(_){ }
     }
-    mo.value=month;
-    yr.value=year;
     try{if(typeof window.render==='function')window.render();}catch(_){ }
+    try{window.tmRefreshMonthlyExecutive?.()}catch(_){ }
+    try{window.tmRefreshRecentMovements?.()}catch(_){ }
+    try{window.tmRefreshSummaryPayments?.()}catch(_){ }
   }
 
   function addRefreshButton(){
@@ -33,6 +52,11 @@
       const old=b.textContent;
       b.textContent='↻ Actualizando…';
       try{
+        // Save the period visible right now before reloading the app.
+        const mo=document.getElementById('mo'),yr=document.getElementById('yr');
+        if(mo?.value) localStorage.setItem(MONTH_KEY,mo.value);
+        if(yr?.value) localStorage.setItem(YEAR_KEY,yr.value);
+
         const r=await fetch('/api/state',{cache:'no-store'});
         if(r.ok){
           const x=await r.json();
@@ -50,7 +74,7 @@
   }
 
   async function init(){
-    selectCurrentPeriod();
+    ensureInitialPeriod();
     addRefreshButton();
     try{
       const r=await fetch('/cdn-cgi/access/get-identity',{cache:'no-store'});
