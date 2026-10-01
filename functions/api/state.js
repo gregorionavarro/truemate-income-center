@@ -3,7 +3,13 @@ const DEFAULT_STATE = {
   p: ["Greg", "Carlos", "Paulina", "Fabiola"],
   c: ["Imperial PFS", "Great West", "RPS"],
   t: [],
-  a: []
+  a: [],
+  l: {
+    "RPS": "https://rpsins.epaypolicy.com/",
+    "Guardian": "https://guardian-ins.epaypolicy.com/",
+    "Rocklake": "https://rocklakeig.epaypolicy.com/",
+    "Burns and Wilcox": "https://burnsandwilcox.epaypolicy.com/"
+  }
 };
 
 async function ensureTable(DB) {
@@ -41,7 +47,12 @@ export async function onRequestGet(context) {
   let state = DEFAULT_STATE;
   try {
     const parsed = JSON.parse(row.json);
-    state = { ...DEFAULT_STATE, ...parsed, a: Array.isArray(parsed?.a) ? parsed.a : [] };
+    state = {
+      ...DEFAULT_STATE,
+      ...parsed,
+      a: Array.isArray(parsed?.a) ? parsed.a : [],
+      l: parsed?.l && typeof parsed.l === 'object' && !Array.isArray(parsed.l) ? parsed.l : DEFAULT_STATE.l
+    };
   } catch (_) {}
 
   return json({ ok: true, exists: true, state, updated_at: row.updated_at });
@@ -70,7 +81,8 @@ export async function onRequestPost(context) {
     p: state.p,
     c: state.c,
     t: state.t,
-    a: Array.isArray(state.a) ? state.a : []
+    a: Array.isArray(state.a) ? state.a : [],
+    l: state.l && typeof state.l === 'object' && !Array.isArray(state.l) ? state.l : DEFAULT_STATE.l
   });
   await DB.prepare(`
     INSERT INTO app_state (id, json, updated_at)
