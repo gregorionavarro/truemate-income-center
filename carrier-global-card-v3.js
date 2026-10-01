@@ -15,7 +15,7 @@
       const rows=JSON.parse(localStorage.getItem('tmic_r')||'[]');
       if(Array.isArray(rows)) return rows;
     }catch(_){ }
-    try{return Array.isArray(window.S?.r)?window.S.r:[]}catch(_){return[]}
+    try{return (typeof S!=='undefined'&&Array.isArray(S.r))?S.r:[]}catch(_){return[]}
   }
 
   function pendingRows(){
@@ -63,7 +63,7 @@
     lastSig=currentSig;
     rendering=true;
     const show=rows.slice(0,10);
-    card.innerHTML=`<div data-tm-global-carrier-v3="1"><div class="head"><div><h3>Próximos pagos a Carrier / MGA / PFA</h3><div class="sub" style="display:block!important">Pendientes globales · ${rows.length} activo${rows.length===1?'':'s'} · permanecen visibles hasta registrar el pago.</div></div><button class="btn soft" type="button" onclick="go('carrier')">Ver todos los pagos →</button></div><div class="tablewrap"><table><thead><tr><th>Carrier / MGA / PFA</th><th>Cliente</th><th>Invoice</th><th>Monto a pagar</th><th>Fecha límite</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${show.length?show.map(r=>{const incomplete=isIncomplete(r);const [txt,cls]=dayInfo(r.carrierDue,incomplete);return `<tr style="cursor:pointer" onclick="tmGlobalCarrierOpen('${esc(r.id)}')"><td><b>${esc(r.carrier||'Pendiente de completar')}</b></td><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td><b>${fmt(amountOf(r))}</b></td><td>${fmtDate(r.carrierDue)}</td><td><span class="tm-days ${cls}">${esc(txt)}</span></td><td><button class="tm-open-pay ${incomplete?'setup':''}" type="button" onclick="event.stopPropagation();tmGlobalCarrierOpen('${esc(r.id)}')">${incomplete?'Completar':'Abrir'}</button></td></tr>`}).join(''):'<tr><td colspan="7" style="color:#6d7d92">Sin obligaciones pendientes a Carrier / MGA / PFA.</td></tr>'}</tbody></table></div></div>`;
+    card.innerHTML=`<div data-tm-global-carrier-v3="1" data-tm-final-carrier-card="1"><div class="head"><div><h3>Próximos pagos a Carrier / MGA / PFA</h3><div class="sub" style="display:block!important">Pendientes globales · ${rows.length} activo${rows.length===1?'':'s'} · permanecen visibles hasta registrar el pago.</div></div><button class="btn soft" type="button" onclick="go('carrier')">Ver todos los pagos →</button></div><div class="tablewrap"><table><thead><tr><th>Carrier / MGA / PFA</th><th>Cliente</th><th>Invoice</th><th>Monto a pagar</th><th>Fecha límite</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${show.length?show.map(r=>{const incomplete=isIncomplete(r);const [txt,cls]=dayInfo(r.carrierDue,incomplete);return `<tr style="cursor:pointer" onclick="tmGlobalCarrierOpen('${esc(r.id)}')"><td><b>${esc(r.carrier||'Pendiente de completar')}</b></td><td>${esc(r.client||'')}</td><td>${esc(r.invoice||'')}</td><td><b>${fmt(amountOf(r))}</b></td><td>${fmtDate(r.carrierDue)}</td><td><span class="tm-days ${cls}">${esc(txt)}</span></td><td><button class="tm-open-pay ${incomplete?'setup':''}" type="button" onclick="event.stopPropagation();tmGlobalCarrierOpen('${esc(r.id)}')">${incomplete?'Completar':'Abrir'}</button></td></tr>`}).join(''):'<tr><td colspan="7" style="color:#6d7d92">Sin obligaciones pendientes a Carrier / MGA / PFA.</td></tr>'}</tbody></table></div></div>`;
     requestAnimationFrame(()=>{rendering=false});
   }
 
